@@ -193,6 +193,12 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
       remaining_seconds: 31536000,
       remaining_text: '365 days',
       package_name: 'com.pubg.obsidian',
+      nativeInit: true,
+      getRegister: 'ABDI-VIP-REGISTER',
+      setRegister: true,
+      getSavedRegister: 'ABDI-VIP-REGISTER',
+      register: 'ABDI-VIP-REGISTER',
+      registered: true,
       OBJECT: {
         EXP: '2026-11-01',
         expires: '2026-11-01',
