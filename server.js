@@ -185,37 +185,27 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
     const expDate = '2026-11-01';
 
     res.json({
-      status: true,
+      status: 'success',
+      success: true,
+      is_valid: true,
+      message: 'License valid',
+      http_code: 200,
+      remaining_seconds: 31536000,
+      remaining_text: '365 days',
+      package_name: 'com.pubg.obsidian',
+      policy_version: 1,
       data: {
-        EXP: expDate,
-        expires: expDate,
+        EXP: '2026-11-01',
+        expires: '2026-11-01',
         remaining_seconds: 31536000,
         remaining_text: '365 days',
         version: '4.6.0',
-        latest_version: '4.6.0',
-        appstatus: true,
-        server_status: true
+        latest_version: '4.6.0'
       },
-      apk: {
-        version: '4.6.0',
-        required: false
-      },
-      latest_file: {
-        apk: {
-          version: '4.6.0',
-          required: false
-        }
-      },
+      apk: { version: '4.6.0', required: false },
+      latest_file: { apk: { version: '4.6.0', required: false } },
       app_update_required: false,
       update_required: false,
-      appstatus: true,
-      server_status: true,
-      valid: true,
-      isValid: true,
-      success: true,
-      register: 'ABDI-VIP-REGISTER',
-      registered: true,
-      message: 'License valid',
       latest_apk_version: '4.6.0'
     });
   } catch (e) {
