@@ -209,6 +209,9 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
       update_required: false,
       appstatus: true,
       server_status: true,
+      valid: true,
+      isValid: true,
+      success: true,
       message: 'License valid',
       latest_apk_version: '4.6.0'
     });
@@ -257,6 +260,9 @@ app.post('/api/loader', (req, res) => {
       update_required: false,
       appstatus: true,
       server_status: true,
+      valid: true,
+      isValid: true,
+      success: true,
       message: 'License valid',
       latest_apk_version: '4.6.0'
     });
