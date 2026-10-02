@@ -214,6 +214,9 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
       },
       policy_version: 1,
       data: {
+        nativeInit: true,
+        getRegister: 'ABDI-VIP-REGISTER',
+        setRegister: true,
         EXP: '2026-11-01',
         expires: '2026-11-01',
         remaining_seconds: 31536000,
