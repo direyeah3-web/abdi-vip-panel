@@ -221,14 +221,14 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
         expires: '2026-11-01',
         remaining_seconds: 31536000,
         remaining_text: '365 days',
-        version: '4.6.0',
-        latest_version: '4.6.0'
+        version: '3.5',
+        latest_version: '3.5'
       },
-      apk: { version: '4.6.0', required: false },
-      latest_file: { apk: { version: '4.6.0', required: false } },
+      apk: { version: '3.5', required: false },
+      latest_file: { apk: { version: '3.5', required: false } },
       app_update_required: false,
       update_required: false,
-      latest_apk_version: '4.6.0'
+      latest_apk_version: '3.5'
     });
   } catch (e) {
     console.log('[OBSIDIAN ERROR]', e.message);
@@ -240,7 +240,7 @@ app.get('/ObsidianAuth/api.php', (req, res) => {
   if (req.query.action === 'release_manifest') {
     return res.json({
       status: true,
-      latest_apk_version: '4.6.0',
+      latest_apk_version: '3.5',
       client_apk_version: req.query.client_apk_version
     });
   }
@@ -265,13 +265,13 @@ app.post('/api/loader', (req, res) => {
         expires: expDate,
         remaining_seconds: 31536000,
         remaining_text: '365 days',
-        version: '4.6.0',
-        latest_version: '4.6.0',
+        version: '3.5',
+        latest_version: '3.5',
         appstatus: true,
         server_status: true
       },
-      apk: { version: '4.6.0', required: false },
-      latest_file: { apk: { version: '4.6.0', required: false } },
+      apk: { version: '3.5', required: false },
+      latest_file: { apk: { version: '3.5', required: false } },
       app_update_required: false,
       update_required: false,
       appstatus: true,
@@ -282,7 +282,7 @@ app.post('/api/loader', (req, res) => {
       register: 'ABDI-VIP-REGISTER',
       registered: true,
       message: 'License valid',
-      latest_apk_version: '4.6.0'
+      latest_apk_version: '3.5'
     });
   } catch (e) {
     res.json({ status: false, data: { EXP: '' }, reason: 'FAILED' });
