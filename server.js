@@ -190,6 +190,7 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
         EXP: expDate,
         expires: expDate,
         remaining_seconds: 31536000,
+        remaining_text: '365 days',
         version: '4.6.0',
         latest_version: '4.6.0',
         appstatus: true,
@@ -212,6 +213,8 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
       valid: true,
       isValid: true,
       success: true,
+      register: 'ABDI-VIP-REGISTER',
+      registered: true,
       message: 'License valid',
       latest_apk_version: '4.6.0'
     });
@@ -249,6 +252,7 @@ app.post('/api/loader', (req, res) => {
         EXP: expDate,
         expires: expDate,
         remaining_seconds: 31536000,
+        remaining_text: '365 days',
         version: '4.6.0',
         latest_version: '4.6.0',
         appstatus: true,
@@ -263,6 +267,8 @@ app.post('/api/loader', (req, res) => {
       valid: true,
       isValid: true,
       success: true,
+      register: 'ABDI-VIP-REGISTER',
+      registered: true,
       message: 'License valid',
       latest_apk_version: '4.6.0'
     });
