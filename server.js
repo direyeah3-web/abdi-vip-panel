@@ -193,6 +193,19 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
       remaining_seconds: 31536000,
       remaining_text: '365 days',
       package_name: 'com.pubg.obsidian',
+      OBJECT: {
+        EXP: '2026-11-01',
+        expires: '2026-11-01',
+        remaining_seconds: 31536000,
+        remaining_text: '365 days',
+        is_valid: true,
+        success: true
+      },
+      DATA: {
+        EXP: '2026-11-01',
+        expires: '2026-11-01',
+        remaining_seconds: 31536000
+      },
       policy_version: 1,
       data: {
         EXP: '2026-11-01',
