@@ -952,6 +952,92 @@ if (localStorage.getItem('token')) {
 
 
 
+<script>
+window.addEventListener("load", function(){
+document.addEventListener('DOMContentLoaded', function() {
+  const lb = document.getElementById('lb');
+  if (lb) {
+    lb.onclick = async function() {
+      const username = document.getElementById('lu').value.trim();
+      const password = document.getElementById('lp').value;
+      if (!username || !password) return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
+      lb.disabled = true;
+      lb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        localStorage.setItem('token', data.token);
+        location.reload();
+      } catch (err) {
+        Swal.fire('Khalad', err.message, 'error');
+        lb.disabled = false;
+        lb.innerHTML = '<i class="fas fa-sign-in-alt"></i> SIGN IN';
+      }
+    };
+  }
+
+  const rb = document.getElementById('rb');
+  if (rb) {
+    rb.onclick = async function() {
+      const username = document.getElementById('ru').value.trim();
+      const password = document.getElementById('rp').value;
+      const fullName = document.getElementById('rf').value.trim();
+      const referral = document.getElementById('rr').value.trim();
+      if (!username || !password) return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
+      rb.disabled = true;
+      rb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, fullName, referral_code: referral })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Register failed');
+        localStorage.setItem('token', data.token);
+        location.reload();
+      } catch (err) {
+        Swal.fire('Khalad', err.message, 'error');
+        rb.disabled = false;
+        rb.innerHTML = '<i class="fas fa-user-plus"></i> CREATE ACCOUNT';
+      }
+    };
+  }
+
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  if (tabLogin && tabRegister) {
+    tabLogin.onclick = function() {
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+    };
+    tabRegister.onclick = function() {
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    };
+  }
+
+  if (localStorage.getItem('token')) {
+    const ls = document.getElementById('loginScreen');
+    const ds = document.getElementById('dash');
+    if (ls) ls.classList.add('hidden');
+    if (ds) ds.classList.remove('hidden');
+  }
+});
+
+});
+</script>
 </body>
 </html>
 
