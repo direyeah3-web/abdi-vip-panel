@@ -643,5 +643,10 @@ app.post('/config.Config/ClientKV', (req, res) => {
   }
 });
 
+
+// ===== LOADER STATIC ROUTE =====
+app.use('/loader', express.static(__dirname + '/loader'));
+
+
 app.listen(PORT, () => console.log('ABDI VIP PANEL running on port ' + PORT));
 });
