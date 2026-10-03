@@ -1,994 +1,92 @@
 
-
 <!DOCTYPE html>
-
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ABDI VIP PANEL</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js">
-
 const tabLogin = document.getElementById('tabLogin');
-
 const tabRegister = document.getElementById('tabRegister');
-
 const loginForm = document.getElementById('loginForm');
-
 const registerForm = document.getElementById('registerForm');
 
-
-
 if (tabLogin) {
-
   tabLogin.onclick = () => {
-
     tabLogin.classList.add('active');
-
     tabRegister.classList.remove('active');
-
     loginForm.classList.remove('hidden');
-
     registerForm.classList.add('hidden');
-
   };
-
   tabRegister.onclick = () => {
-
     tabRegister.classList.add('active');
-
     tabLogin.classList.remove('active');
-
     registerForm.classList.remove('hidden');
-
     loginForm.classList.add('hidden');
-
   };
-
 }
-
-
 
 const rb = document.getElementById('rb');
-
 if (rb) {
-
   rb.onclick = async () => {
-
     const username = document.getElementById('ru').value.trim();
-
     const password = document.getElementById('rp').value;
-
     const fullName = document.getElementById('rf').value.trim();
-
     const referral = document.getElementById('rr').value.trim();
-
     if (!username || !password) {
-
       return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
-
     }
-
     rb.disabled = true;
-
-    rb.innerHTML = '<i class="fas fa-spinner fa-spin">
-</i> Creating...';
-
+    rb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     try {
-
       const res = await fetch('/api/register', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ username, password, fullName, referral_code: referral })
-
       });
-
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'Register failed');
-
       localStorage.setItem('token', data.token);
-
       Swal.fire('Guul!', 'Account la abuuray!', 'success').then(() => location.reload());
-
     } catch (err) {
-
       Swal.fire('Khalad', err.message, 'error');
-
       rb.disabled = false;
-
-      rb.innerHTML = '<i class="fas fa-user-plus">
-</i> CREATE ACCOUNT';
-
+      rb.innerHTML = '<i class="fas fa-user-plus"></i> CREATE ACCOUNT';
     }
-
   };
-
 }
 
 
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
-
   const tabLogin = document.getElementById('tabLogin');
-
   const tabRegister = document.getElementById('tabRegister');
-
   const loginForm = document.getElementById('loginForm');
-
   const registerForm = document.getElementById('registerForm');
 
-
-
   if (tabLogin && tabRegister) {
-
     tabLogin.onclick = () => {
-
       tabLogin.classList.add('active');
-
       tabRegister.classList.remove('active');
-
       loginForm.classList.remove('hidden');
-
       registerForm.classList.add('hidden');
-
     };
-
     tabRegister.onclick = () => {
-
       tabRegister.classList.add('active');
-
       tabLogin.classList.remove('active');
-
       registerForm.classList.remove('hidden');
-
       loginForm.classList.add('hidden');
-
     };
-
   }
 
-
-
   const rb = document.getElementById('rb');
-
   if (rb) {
-
     rb.onclick = async () => {
-
       const username = document.getElementById('ru').value.trim();
-
       const password = document.getElementById('rp').value;
-
       const fullName = document.getElementById('rf').value.trim();
-
       const referral = document.getElementById('rr').value.trim();
-
       if (!username || !password) {
-
         return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
-
       }
-
-      rb.disabled = true;
-
-      rb.innerHTML = '<i class="fas fa-spinner fa-spin">
-</i> Creating...';
-
-      try {
-
-        const res = await fetch('/api/register', {
-
-          method: 'POST',
-
-          headers: { 'Content-Type': 'application/json' },
-
-          body: JSON.stringify({ username, password, fullName, referral_code: referral })
-
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || 'Register failed');
-
-        localStorage.setItem('token', data.token);
-
-        Swal.fire('Guul!', 'Account la abuuray!', 'success').then(() => location.reload());
-
-      } catch (err) {
-
-        Swal.fire('Khalad', err.message, 'error');
-
-        rb.disabled = false;
-
-        rb.innerHTML = '<i class="fas fa-user-plus">
-</i> CREATE ACCOUNT';
-
-      }
-
-    };
-
-  }
-
-});
-
-
-
-
-
-document.addEventListener('DOMContentLoaded', function() {
-
-  const token = localStorage.getItem('token');
-
-  if (!token) return;
-
-
-
-  const headers = { 'Authorization': 'Bearer ' + token };
-
-
-
-  // ============ LOAD STATS ============
-
-  async function loadStats() {
-
-    try {
-
-      const me = await fetch('/api/me', { headers }).then(r => r.json());
-
-      document.getElementById('wn').textContent = me.username || 'User';
-
-      document.getElementById('wn2').textContent = me.username || 'User';
-
-
-
-      const stats = await fetch('/api/stats', { headers }).then(r => r.json()).catch(() => ({}));
-
-      const adminStats = await fetch('/api/admin/stats', { headers }).then(r => r.json()).catch(() => ({}));
-
-
-
-      const s = Object.assign({}, stats, adminStats);
-
-      document.getElementById('s1').textContent = s.total_users || s.users || 0;
-
-      document.getElementById('s2').textContent = s.total_licenses || s.licenses || 0;
-
-      document.getElementById('s3').textContent = s.used_licenses || s.used || 0;
-
-      document.getElementById('s4').textContent = s.referrals || 0;
-
-
-
-      // Charts
-
-      if (window.Chart) {
-
-        const lcCtx = document.getElementById('lc');
-
-        const dcCtx = document.getElementById('dc');
-
-        if (lcCtx) {
-
-          new Chart(lcCtx, {
-
-            type: 'line',
-
-            data: {
-
-              labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-
-              datasets: [{
-
-                label: 'Activity',
-
-                data: [12, 19, 8, 15, 22, 18, 25],
-
-                borderColor: '#7c3aed',
-
-                backgroundColor: 'rgba(124,58,237,0.15)',
-
-                tension: 0.4,
-
-                fill: true
-
-              }]
-
-            },
-
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b8b9e' } }, y: { ticks: { color: '#8b8b9e' } } } }
-
-          });
-
-        }
-
-        if (dcCtx) {
-
-          new Chart(dcCtx, {
-
-            type: 'doughnut',
-
-            data: {
-
-              labels: ['Used','Unused'],
-
-              datasets: [{
-
-                data: [s.used_licenses || 0, (s.total_licenses || 0) - (s.used_licenses || 0)],
-
-                backgroundColor: ['#7c3aed','#00ffcc']
-
-              }]
-
-            },
-
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e5e7eb' } } } }
-
-          });
-
-        }
-
-      }
-
-
-
-      // Activity
-
-      const af = document.getElementById('af');
-
-      if (af) {
-
-        af.innerHTML = `
-
-          <div class="activity-item">
-<div class="dot">
-</div>
-<div>
-<div class="activity-text">Stats loaded successfully</div>
-</div>
-</div>
-
-          <div class="activity-item">
-<div class="dot">
-</div>
-<div>
-<div class="activity-text">Welcome back, ${me.username}</div>
-</div>
-</div>
-
-          <div class="activity-item">
-<div class="dot">
-</div>
-<div>
-<div class="activity-text">Panel is live</div>
-</div>
-</div>
-
-        `;
-
-      }
-
-    } catch (e) {
-
-      console.error(e);
-
-    }
-
-  }
-
-
-
-  // ============ QUICK ACTIONS ============
-
-  document.querySelectorAll('.quick-btn').forEach(btn => {
-
-    btn.onclick = async () => {
-
-      const text = btn.textContent.trim();
-
-
-
-      if (text.includes('New License')) {
-
-        const { value: count } = await Swal.fire({
-
-          title: 'Generate Licenses',
-
-          input: 'number',
-
-          inputValue: 1,
-
-          inputLabel: 'How many?',
-
-          showCancelButton: true
-
-        });
-
-        if (!count) return;
-
-        const res = await fetch('/api/admin/licenses/bulk', {
-
-          method: 'POST',
-
-          headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
-
-          body: JSON.stringify({ count: parseInt(count), duration: '30 days', max_devices: 1 })
-
-        });
-
-        const data = await res.json();
-
-        if (data.ok) {
-
-          Swal.fire('Guul!', `${data.count} licenses la abuuray`, 'success');
-
-        } else {
-
-          Swal.fire('Khalad', data.error || 'Failed', 'error');
-
-        }
-
-      }
-
-
-
-      if (text.includes('Add User')) {
-
-        Swal.fire('Coming soon', 'Add User feature', 'info');
-
-      }
-
-
-
-      if (text.includes('Export')) {
-
-        Swal.fire('Coming soon', 'Export feature', 'info');
-
-      }
-
-
-
-      if (text.includes('Refresh')) {
-
-        loadStats();
-
-        Swal.fire('La cusboonaysiiyay!', '', 'success');
-
-      }
-
-    };
-
-  });
-
-
-
-  // ============ NAV ITEMS ============
-
-  document.querySelectorAll('.nav-item').forEach(item => {
-
-    item.onclick = () => {
-
-      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-
-      item.classList.add('active');
-
-    };
-
-  });
-
-
-
-  // ============ THEME TOGGLE ============
-
-  const tb = document.getElementById('tb');
-
-  if (tb) tb.onclick = () => document.body.classList.toggle('light-mode');
-
-
-
-  // ============ MOBILE TOGGLE ============
-
-  const mb = document.getElementById('mb');
-
-  const sb = document.getElementById('sb');
-
-  if (mb && sb) mb.onclick = () => sb.classList.toggle('open');
-
-
-
-  // ============ LOGOUT ============
-
-  const ob = document.getElementById('ob');
-
-  if (ob) ob.onclick = () => {
-
-    localStorage.removeItem('token');
-
-    location.reload();
-
-  };
-
-
-
-  // ============ LOAD STATS ON START ============
-
-  loadStats();
-
-});
-
-
-
-
-
-document.addEventListener('DOMContentLoaded', function() {
-
-  const lb = document.getElementById('lb');
-
-  if (!lb) return;
-
-
-
-  lb.onclick = async () => {
-
-    const username = document.getElementById('lu').value.trim();
-
-    const password = document.getElementById('lp').value;
-
-    if (!username || !password) {
-
-      return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
-
-    }
-
-    lb.disabled = true;
-
-    lb.innerHTML = '<i class="fas fa-spinner fa-spin">
-</i> Signing in...';
-
-    try {
-
-      const res = await fetch('/api/login', {
-
-        method: 'POST',
-
-        headers: { 'Content-Type': 'application/json' },
-
-        body: JSON.stringify({ username, password })
-
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Login failed');
-
-      localStorage.setItem('token', data.token);
-
-      Swal.fire('Guul!', 'Waad soo gashay!', 'success').then(() => location.reload());
-
-    } catch (err) {
-
-      Swal.fire('Khalad', err.message, 'error');
-
-      lb.disabled = false;
-
-      lb.innerHTML = '<i class="fas fa-sign-in-alt">
-</i> SIGN IN';
-
-    }
-
-  };
-
-});
-
-
-
-
-
-
-
-// Auto-show dashboard if token exists
-
-if (localStorage.getItem('token')) {
-
-  const ls = document.getElementById('loginScreen');
-
-  const ds = document.getElementById('dash');
-
-  if (ls) ls.classList.add('hidden');
-
-  if (ds) ds.classList.remove('hidden');
-
-}
-
-
-
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
-</script>
-
-<style>
-
-</style>
-<link rel="stylesheet" href="/style.css">
-</head>
-<body>
-
-
-
-<div id="loginScreen">
-
-  <div class="login-box">
-
-    <div class="login-logo">
-<i class="fas fa-shield-halved">
-</i>
-</div>
-
-    <h1 class="login-title">ABDI VIP PANEL</h1>
-
-    <p class="login-sub">Sign in to access your dashboard</p>
-
-    <div class="auth-tabs">
-
-      <button class="auth-tab active" id="tabLogin">Login</button>
-
-      <button class="auth-tab" id="tabRegister">Register</button>
-
-    </div>
-
-    <div id="loginForm">
-
-      <div class="field">
-<label>Username</label>
-<input id="lu" type="text" placeholder="Username">
-</div>
-
-      <div class="field password-field">
-<label>Password</label>
-<input id="lp" type="password" placeholder="Password">
-</div>
-
-      <button class="btn-primary" id="lb">
-<i class="fas fa-sign-in-alt">
-</i> SIGN IN</button>
-
-    </div>
-
-    <div id="registerForm" class="hidden">
-
-      <div class="field">
-<label>Username</label>
-<input id="ru" placeholder="Choose username">
-</div>
-
-      <div class="field">
-<label>Full Name</label>
-<input id="rf" placeholder="Your full name">
-</div>
-
-      <div class="field password-field">
-<label>Password</label>
-<input id="rp" type="password" placeholder="Create password">
-</div>
-
-      <div class="field">
-<label>Referral Token</label>
-<input id="rr" placeholder="Optional">
-</div>
-
-      <button class="btn-primary" id="rb">
-<i class="fas fa-user-plus">
-</i> CREATE ACCOUNT</button>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-
-<div id="dash" class="hidden">
-
-<div class="topbar">
-
-<div class="logo">
-
-<button class="icon-btn mobile-toggle" id="mb">
-<i class="fas fa-bars">
-</i>
-</button>
-
-<div class="logo-icon">
-<i class="fas fa-shield-halved">
-</i>
-</div>
-
-<div class="brand">ABDI <span>VIP</span> PANEL</div>
-
-</div>
-
-<div style="display:flex;gap:10px">
-
-<button class="icon-btn" id="tb">
-<i class="fas fa-moon">
-</i>
-</button>
-
-<button class="icon-btn" id="rb">
-<i class="fas fa-rotate">
-</i>
-</button>
-
-<button class="icon-btn" id="ob">
-<i class="fas fa-sign-out-alt">
-</i>
-</button>
-
-</div>
-
-</div>
-
-
-
-<div class="layout">
-
-<aside class="sidebar" id="sb">
-
-<div class="nav-label">Navigation</div>
-
-<a class="nav-item active">
-<i class="fas fa-chart-line">
-</i> Dashboard</a>
-
-<a class="nav-item">
-<i class="fas fa-users">
-</i> Users</a>
-
-<a class="nav-item">
-<i class="fas fa-wrench">
-</i> Tools</a>
-
-<a class="nav-item">
-<i class="fas fa-clipboard-list">
-</i> Logs</a>
-
-<a class="nav-item">
-<i class="fas fa-cog">
-</i> Settings</a>
-
-<div class="nav-label" style="margin-top:20px">Manage</div>
-
-<a class="nav-item">
-<i class="fas fa-key">
-</i> Licenses</a>
-
-<a class="nav-item">
-<i class="fas fa-link">
-</i> Referrals</a>
-
-<a class="nav-item">
-<i class="fas fa-comment-dots">
-</i> Support</a>
-
-</aside>
-
-
-
-<main class="main">
-
-<h1 class="page-title">Dashboard</h1>
-
-<p class="page-sub">Welcome back, <span id="wn" style="color:#06b6d4">User</span>
-</p>
-
-
-
-<div class="welcome">
-
-<div>
-<h2>Welcome back, <span id="wn2">User</span> 👋</h2>
-<p>You're in control. Here's what's happening today.</p>
-</div>
-
-<div class="welcome-icon">
-<i class="fas fa-shield-halved">
-</i>
-</div>
-
-</div>
-
-
-
-<div class="stats-grid">
-
-<div class="stat-card">
-<div class="stat-top">
-<div>
-<div class="stat-label">Total Users</div>
-<div class="stat-value blue-grad" id="s1">—</div>
-</div>
-<div class="stat-icon blue">
-<i class="fas fa-users">
-</i>
-</div>
-</div>
-<div class="trend">
-<i class="fas fa-arrow-up">
-</i> Live</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-top">
-<div>
-<div class="stat-label">Total Licenses</div>
-<div class="stat-value purple-grad" id="s2">—</div>
-</div>
-<div class="stat-icon purple">
-<i class="fas fa-key">
-</i>
-</div>
-</div>
-<div class="trend">
-<i class="fas fa-arrow-up">
-</i> Live</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-top">
-<div>
-<div class="stat-label">Used Licenses</div>
-<div class="stat-value green-grad" id="s3">—</div>
-</div>
-<div class="stat-icon green">
-<i class="fas fa-check-circle">
-</i>
-</div>
-</div>
-<div class="trend">
-<i class="fas fa-arrow-up">
-</i> Live</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-top">
-<div>
-<div class="stat-label">Referrals</div>
-<div class="stat-value orange-grad" id="s4">—</div>
-</div>
-<div class="stat-icon orange">
-<i class="fas fa-link">
-</i>
-</div>
-</div>
-<div class="trend">
-<i class="fas fa-arrow-up">
-</i> Live</div>
-</div>
-
-</div>
-
-
-
-<div class="charts-grid">
-
-<div class="card">
-<div class="card-title">Analytics Overview</div>
-<div class="chart-box">
-<canvas id="lc">
-</canvas>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">License Status</div>
-<div class="chart-box">
-<canvas id="dc">
-</canvas>
-</div>
-</div>
-
-</div>
-
-
-
-<div class="card">
-<div class="card-title">Quick Actions</div>
-
-<div class="quick-grid">
-
-<button class="quick-btn">
-<i class="fas fa-plus-circle">
-</i>New License</button>
-
-<button class="quick-btn">
-<i class="fas fa-user-plus">
-</i>Add User</button>
-
-<button class="quick-btn">
-<i class="fas fa-download">
-</i>Export</button>
-
-<button class="quick-btn" onclick="loadStats()">
-<i class="fas fa-sync-alt">
-</i>Refresh</button>
-
-</div>
-</div>
-
-
-
-<div class="card">
-<div class="card-title">Recent Activity</div>
-<div id="af">
-<div class="activity-item">
-<div class="dot">
-</div>
-<div>
-<div class="activity-text">Loading activity...</div>
-</div>
-</div>
-</div>
-</div>
-
-</main>
-</div>
-</div>
-
-
-
-
-
-
-<script>
-window.addEventListener("load", function(){
-document.addEventListener('DOMContentLoaded', function() {
-  const lb = document.getElementById('lb');
-  if (lb) {
-    lb.onclick = async function() {
-      const username = document.getElementById('lu').value.trim();
-      const password = document.getElementById('lp').value;
-      if (!username || !password) return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
-      lb.disabled = true;
-      lb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Login failed');
-        localStorage.setItem('token', data.token);
-        location.reload();
-      } catch (err) {
-        Swal.fire('Khalad', err.message, 'error');
-        lb.disabled = false;
-        lb.innerHTML = '<i class="fas fa-sign-in-alt"></i> SIGN IN';
-      }
-    };
-  }
-
-  const rb = document.getElementById('rb');
-  if (rb) {
-    rb.onclick = async function() {
-      const username = document.getElementById('ru').value.trim();
-      const password = document.getElementById('rp').value;
-      const fullName = document.getElementById('rf').value.trim();
-      const referral = document.getElementById('rr').value.trim();
-      if (!username || !password) return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
       rb.disabled = true;
       rb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
       try {
@@ -1000,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Register failed');
         localStorage.setItem('token', data.token);
-        location.reload();
+        Swal.fire('Guul!', 'Account la abuuray!', 'success').then(() => location.reload());
       } catch (err) {
         Swal.fire('Khalad', err.message, 'error');
         rb.disabled = false;
@@ -1008,42 +106,241 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
   }
-
-  const tabLogin = document.getElementById('tabLogin');
-  const tabRegister = document.getElementById('tabRegister');
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-  if (tabLogin && tabRegister) {
-    tabLogin.onclick = function() {
-      tabLogin.classList.add('active');
-      tabRegister.classList.remove('active');
-      loginForm.classList.remove('hidden');
-      registerForm.classList.add('hidden');
-    };
-    tabRegister.onclick = function() {
-      tabRegister.classList.add('active');
-      tabLogin.classList.remove('active');
-      registerForm.classList.remove('hidden');
-      loginForm.classList.add('hidden');
-    };
-  }
-
-  if (localStorage.getItem('token')) {
-    const ls = document.getElementById('loginScreen');
-    const ds = document.getElementById('dash');
-    if (ls) ls.classList.add('hidden');
-    if (ds) ds.classList.remove('hidden');
-  }
 });
 
+
+document.addEventListener('DOMContentLoaded', function() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const headers = { 'Authorization': 'Bearer ' + token };
+
+  // ============ LOAD STATS ============
+  async function loadStats() {
+    try {
+      const me = await fetch('/api/me', { headers }).then(r => r.json());
+      document.getElementById('wn').textContent = me.username || 'User';
+      document.getElementById('wn2').textContent = me.username || 'User';
+
+      const stats = await fetch('/api/stats', { headers }).then(r => r.json()).catch(() => ({}));
+      const adminStats = await fetch('/api/admin/stats', { headers }).then(r => r.json()).catch(() => ({}));
+
+      const s = Object.assign({}, stats, adminStats);
+      document.getElementById('s1').textContent = s.total_users || s.users || 0;
+      document.getElementById('s2').textContent = s.total_licenses || s.licenses || 0;
+      document.getElementById('s3').textContent = s.used_licenses || s.used || 0;
+      document.getElementById('s4').textContent = s.referrals || 0;
+
+      // Charts
+      if (window.Chart) {
+        const lcCtx = document.getElementById('lc');
+        const dcCtx = document.getElementById('dc');
+        if (lcCtx) {
+          new Chart(lcCtx, {
+            type: 'line',
+            data: {
+              labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+              datasets: [{
+                label: 'Activity',
+                data: [12, 19, 8, 15, 22, 18, 25],
+                borderColor: '#7c3aed',
+                backgroundColor: 'rgba(124,58,237,0.15)',
+                tension: 0.4,
+                fill: true
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b8b9e' } }, y: { ticks: { color: '#8b8b9e' } } } }
+          });
+        }
+        if (dcCtx) {
+          new Chart(dcCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Used','Unused'],
+              datasets: [{
+                data: [s.used_licenses || 0, (s.total_licenses || 0) - (s.used_licenses || 0)],
+                backgroundColor: ['#7c3aed','#00ffcc']
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e5e7eb' } } } }
+          });
+        }
+      }
+
+      // Activity
+      const af = document.getElementById('af');
+      if (af) {
+        af.innerHTML = `
+          <div class="activity-item"><div class="dot"></div><div><div class="activity-text">Stats loaded successfully</div></div></div>
+          <div class="activity-item"><div class="dot"></div><div><div class="activity-text">Welcome back, ${me.username}</div></div></div>
+          <div class="activity-item"><div class="dot"></div><div><div class="activity-text">Panel is live</div></div></div>
+        `;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // ============ QUICK ACTIONS ============
+  document.querySelectorAll('.quick-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const text = btn.textContent.trim();
+
+      if (text.includes('New License')) {
+        const { value: count } = await Swal.fire({
+          title: 'Generate Licenses',
+          input: 'number',
+          inputValue: 1,
+          inputLabel: 'How many?',
+          showCancelButton: true
+        });
+        if (!count) return;
+        const res = await fetch('/api/admin/licenses/bulk', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+          body: JSON.stringify({ count: parseInt(count), duration: '30 days', max_devices: 1 })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          Swal.fire('Guul!', `${data.count} licenses la abuuray`, 'success');
+        } else {
+          Swal.fire('Khalad', data.error || 'Failed', 'error');
+        }
+      }
+
+      if (text.includes('Add User')) {
+        Swal.fire('Coming soon', 'Add User feature', 'info');
+      }
+
+      if (text.includes('Export')) {
+        Swal.fire('Coming soon', 'Export feature', 'info');
+      }
+
+      if (text.includes('Refresh')) {
+        loadStats();
+        Swal.fire('La cusboonaysiiyay!', '', 'success');
+      }
+    };
+  });
+
+  // ============ NAV ITEMS ============
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.onclick = () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    };
+  });
+
+  // ============ THEME TOGGLE ============
+  const tb = document.getElementById('tb');
+  if (tb) tb.onclick = () => document.body.classList.toggle('light-mode');
+
+  // ============ MOBILE TOGGLE ============
+  const mb = document.getElementById('mb');
+  const sb = document.getElementById('sb');
+  if (mb && sb) mb.onclick = () => sb.classList.toggle('open');
+
+  // ============ LOGOUT ============
+  const ob = document.getElementById('ob');
+  if (ob) ob.onclick = () => {
+    localStorage.removeItem('token');
+    location.reload();
+  };
+
+  // ============ LOAD STATS ON START ============
+  loadStats();
 });
+
 </script>
-</body>
-</html>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+</style><link rel="stylesheet" href="/style.css"></head><body>
 
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo"><i class="fas fa-shield-halved"></i></div>
+    <h1 class="login-title">ABDI VIP PANEL</h1>
+    <p class="login-sub">Sign in to access your dashboard</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">Login</button>
+      <button class="auth-tab" id="tabRegister">Register</button>
+    </div>
+    <div id="loginForm">
+      <div class="field"><label>Username</label><input id="lu" type="text" placeholder="Username"></div>
+      <div class="field password-field"><label>Password</label><input id="lp" type="password" placeholder="Password"></div>
+      <button class="btn-primary" id="lb"><i class="fas fa-sign-in-alt"></i> SIGN IN</button>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="field"><label>Username</label><input id="ru" placeholder="Choose username"></div>
+      <div class="field"><label>Full Name</label><input id="rf" placeholder="Your full name"></div>
+      <div class="field password-field"><label>Password</label><input id="rp" type="password" placeholder="Create password"></div>
+      <div class="field"><label>Referral Token</label><input id="rr" placeholder="Optional"></div>
+      <button class="btn-primary" id="rb"><i class="fas fa-user-plus"></i> CREATE ACCOUNT</button>
+    </div>
+  </div>
+</div>
 
+<div id="dash" class="hidden">
+<div class="topbar">
+<div class="logo">
+<button class="icon-btn mobile-toggle" id="mb"><i class="fas fa-bars"></i></button>
+<div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+<div class="brand">ABDI <span>VIP</span> PANEL</div>
+</div>
+<div style="display:flex;gap:10px">
+<button class="icon-btn" id="tb"><i class="fas fa-moon"></i></button>
+<button class="icon-btn" id="rb"><i class="fas fa-rotate"></i></button>
+<button class="icon-btn" id="ob"><i class="fas fa-sign-out-alt"></i></button>
+</div>
+</div>
 
+<div class="layout">
+<aside class="sidebar" id="sb">
+<div class="nav-label">Navigation</div>
+<a class="nav-item active"><i class="fas fa-chart-line"></i> Dashboard</a>
+<a class="nav-item"><i class="fas fa-users"></i> Users</a>
+<a class="nav-item"><i class="fas fa-wrench"></i> Tools</a>
+<a class="nav-item"><i class="fas fa-clipboard-list"></i> Logs</a>
+<a class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+<div class="nav-label" style="margin-top:20px">Manage</div>
+<a class="nav-item"><i class="fas fa-key"></i> Licenses</a>
+<a class="nav-item"><i class="fas fa-link"></i> Referrals</a>
+<a class="nav-item"><i class="fas fa-comment-dots"></i> Support</a>
+</aside>
 
+<main class="main">
+<h1 class="page-title">Dashboard</h1>
+<p class="page-sub">Welcome back, <span id="wn" style="color:#06b6d4">User</span></p>
+
+<div class="welcome">
+<div><h2>Welcome back, <span id="wn2">User</span> 👋</h2><p>You're in control. Here's what's happening today.</p></div>
+<div class="welcome-icon"><i class="fas fa-shield-halved"></i></div>
+</div>
+
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-top"><div><div class="stat-label">Total Users</div><div class="stat-value blue-grad" id="s1">—</div></div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="trend"><i class="fas fa-arrow-up"></i> Live</div></div>
+<div class="stat-card"><div class="stat-top"><div><div class="stat-label">Total Licenses</div><div class="stat-value purple-grad" id="s2">—</div></div><div class="stat-icon purple"><i class="fas fa-key"></i></div></div><div class="trend"><i class="fas fa-arrow-up"></i> Live</div></div>
+<div class="stat-card"><div class="stat-top"><div><div class="stat-label">Used Licenses</div><div class="stat-value green-grad" id="s3">—</div></div><div class="stat-icon green"><i class="fas fa-check-circle"></i></div></div><div class="trend"><i class="fas fa-arrow-up"></i> Live</div></div>
+<div class="stat-card"><div class="stat-top"><div><div class="stat-label">Referrals</div><div class="stat-value orange-grad" id="s4">—</div></div><div class="stat-icon orange"><i class="fas fa-link"></i></div></div><div class="trend"><i class="fas fa-arrow-up"></i> Live</div></div>
+</div>
+
+<div class="charts-grid">
+<div class="card"><div class="card-title">Analytics Overview</div><div class="chart-box"><canvas id="lc"></canvas></div></div>
+<div class="card"><div class="card-title">License Status</div><div class="chart-box"><canvas id="dc"></canvas></div></div>
+</div>
+
+<div class="card"><div class="card-title">Quick Actions</div>
+<div class="quick-grid">
+<button class="quick-btn"><i class="fas fa-plus-circle"></i>New License</button>
+<button class="quick-btn"><i class="fas fa-user-plus"></i>Add User</button>
+<button class="quick-btn"><i class="fas fa-download"></i>Export</button>
+<button class="quick-btn" onclick="loadStats()"><i class="fas fa-sync-alt"></i>Refresh</button>
+</div></div>
+
+<div class="card"><div class="card-title">Recent Activity</div><div id="af"><div class="activity-item"><div class="dot"></div><div><div class="activity-text">Loading activity...</div></div></div></div></div>
+</main></div></div>
+
+</body></html>
 
 
 
