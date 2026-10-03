@@ -99,7 +99,33 @@ tr:hover td{background:var(--card-hover);}
 input,select{width:100%;padding:12px 14px;background:#0a0a0f;border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;margin-bottom:15px;}
 input:focus,select:focus{border-color:var(--primary);}
 label{display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--muted);}
-@media(max-width:768px){.sidebar{width:70px;}.sidebar-brand,.nav-item span,.nav-section,.user-info{display:none;}.nav-item{justify-content:center;}.main{margin-left:70px;}.content-grid{grid-template-columns:1fr;}.search-bar{width:200px;}}
+@media(max-width:768px){
+    .sidebar{width:240px;transform:translateX(-100%);transition:transform .3s;z-index:200;}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-brand,.nav-item span,.nav-section,.user-info{display:block;}
+    .nav-item{justify-content:flex-start;}
+    .main{margin-left:0;}
+    .content-grid{grid-template-columns:1fr;}
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .search-bar{width:100%;}
+    .topnav{padding:12px 15px;flex-wrap:wrap;gap:10px;}
+    .topnav .search-bar{width:100%;order:3;margin-top:5px;}
+    .hero{padding:25px;}
+    .hero h1{font-size:24px;}
+    .hero p{font-size:14px;}
+    .hero-buttons{flex-direction:column;}
+    .hero-buttons button{width:100%;justify-content:center;}
+    .page{padding:15px;}
+    .panel{padding:18px;}
+    .stat-value{font-size:26px;}
+    .menu-toggle{display:flex !important;}
+    .mobile-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:150;}
+    .mobile-overlay.show{display:block;}
+    .status-badge{padding:6px 10px;font-size:11px;}
+    .status-text{display:none;}
+    .duration-grid{grid-template-columns:1fr 1fr;}
+}
+.menu-toggle{display:none;background:var(--card);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:10px;cursor:pointer;align-items:center;justify-content:center;font-size:16px;}
 </style>
 </head>
 <body>
@@ -128,7 +154,8 @@ label{display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:var(-
 </div>
 
 <div id="dashboard">
-<aside class="sidebar">
+<div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
 <div class="sidebar-header"><div class="sidebar-logo">AV</div><div class="sidebar-brand">ABDI VIP<small>Autonomous Panel</small></div></div>
 <nav class="sidebar-nav">
 <div class="nav-section">Main</div>
@@ -144,9 +171,10 @@ label{display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:var(-
 </aside>
 <main class="main">
 <header class="topnav">
-<div class="search-bar"><i class="fa-solid fa-search"></i><input type="text" placeholder="Search apps, workflows, agents..."></div>
-<div style="display:flex;align-items:center;gap:15px;">
-<div class="status-badge"><div class="status-dot"></div> All Systems Active</div>
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+<div class="search-bar"><i class="fa-solid fa-search"></i><input type="text" placeholder="Search..."></div>
+<div style="display:flex;align-items:center;gap:10px;">
+<div class="status-badge"><div class="status-dot"></div><span class="status-text">All Systems Active</span></div>
 <button class="submit-btn" style="width:auto;padding:10px 14px;margin:0;" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
 </div>
 </header>
@@ -211,6 +239,12 @@ var selectedDays=1;
 function selectDuration(b,d){document.querySelectorAll('.duration-btn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');selectedDays=d;document.getElementById('custom-days').style.display=d==='custom'?'block':'none';}
 async function generateLicenses(){var d=selectedDays;if(d==='custom'){d=parseInt(document.getElementById('custom-days').value);if(!d){alert('Enter valid days');return;}}var q=parseInt(document.getElementById('license-quantity').value)||1;try{var t=localStorage.getItem('token');var r=await fetch('/api/licenses/bulk',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({days:d,quantity:q})});var data=await r.json();if(data.success){closeLicenseModal();alert(q+' licenses created!');loadLicenses();}else{alert('Error: '+(data.error||'Unknown'));}}catch(e){alert('Error: '+e.message);}}
 async function loadReferrals(){try{var t=localStorage.getItem('token');var r=await fetch('/api/admin/referrals',{headers:{'Authorization':'Bearer '+t}});var d=await r.json();var tb=document.getElementById('referrals-tbody');if(!tb)return;if(!Array.isArray(d)||d.length===0){tb.innerHTML='<tr><td colspan="3" style="text-align:center;padding:20px;">No referrals</td></tr>';return;}tb.innerHTML=d.map(function(x){return '<tr><td>#'+x.id+'</td><td>'+x.referrer_code+'</td><td>'+x.referred_user+'</td></tr>';}).join('');}catch(e){console.error(e);}}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('mobile-overlay').classList.toggle('show');
+}
+
 function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
 if(localStorage.getItem('token')){showDashboard();}
 </script>
