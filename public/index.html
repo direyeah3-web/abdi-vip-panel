@@ -55,6 +55,59 @@ if (rb) {
   };
 }
 
+
+document.addEventListener('DOMContentLoaded', function() {
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+
+  if (tabLogin && tabRegister) {
+    tabLogin.onclick = () => {
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+    };
+    tabRegister.onclick = () => {
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    };
+  }
+
+  const rb = document.getElementById('rb');
+  if (rb) {
+    rb.onclick = async () => {
+      const username = document.getElementById('ru').value.trim();
+      const password = document.getElementById('rp').value;
+      const fullName = document.getElementById('rf').value.trim();
+      const referral = document.getElementById('rr').value.trim();
+      if (!username || !password) {
+        return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
+      }
+      rb.disabled = true;
+      rb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, fullName, referral_code: referral })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Register failed');
+        localStorage.setItem('token', data.token);
+        Swal.fire('Guul!', 'Account la abuuray!', 'success').then(() => location.reload());
+      } catch (err) {
+        Swal.fire('Khalad', err.message, 'error');
+        rb.disabled = false;
+        rb.innerHTML = '<i class="fas fa-user-plus"></i> CREATE ACCOUNT';
+      }
+    };
+  }
+});
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
