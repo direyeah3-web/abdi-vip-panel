@@ -426,3 +426,105 @@ body::before {
 .auth-tab:hover:not(.active) {
   color: var(--text);
 }
+
+/* ============ OBSIDIAN STYLE FIX ============ */
+.field input,
+input[type="text"],
+input[type="password"] {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  padding: 16px 16px 16px 48px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  width: 100% !important;
+  font-family: inherit !important;
+}
+
+.field input:focus,
+input[type="text"]:focus,
+input[type="password"]:focus {
+  outline: none !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15) !important;
+}
+
+.field input::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Icon inside field */
+.field {
+  position: relative !important;
+}
+
+.field::before {
+  content: '\f007';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  left: 18px;
+  top: 46px;
+  color: #6b7280;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.field:nth-child(2)::before {
+  content: '\f023';
+}
+
+/* Password eye */
+.field.password-field::after {
+  content: '\f06e';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  right: 18px;
+  top: 46px;
+  color: #6b7280;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Button */
+.btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4) !important;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Tabs casri */
+.auth-tabs {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 5px !important;
+}
+
+.auth-tab {
+  padding: 14px !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+}
+
+.auth-tab.active {
+  background: rgba(124, 58, 237, 0.2) !important;
+  color: #fff !important;
+  border: 1px solid rgba(124, 58, 237, 0.4) !important;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3) !important;
+}
