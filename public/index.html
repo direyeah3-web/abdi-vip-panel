@@ -388,7 +388,10 @@
                     '<td style="padding: 12px;">' + (u.fullname || '-') + '</td>' +
                     '<td style="padding: 12px;"><span style="padding: 4px 10px; border-radius: 20px; background: ' + roleColor + '; font-size: 12px;">' + u.role + '</span></td>' +
                     '<td style="padding: 12px;">' + (u.license_key || '-') + '</td>' +
-                    '<td style="padding: 12px;">' +
+                    '<td style="padding: 12px; white-space: nowrap;">' +
+                        '<button onclick="editUserRole(' + u.id + ', \'' + u.role + '\')" style="background: #8b5cf6; border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 5px;">' +
+                            '<i class="fa-solid fa-pen"></i>' +
+                        '</button>' +
                         '<button onclick="deleteUser(' + u.id + ')" style="background: #ef4444; border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer;">' +
                             '<i class="fa-solid fa-trash"></i>' +
                         '</button>' +
@@ -486,316 +489,85 @@
     }
     
     function renderCharts(data) {
-        const ctx1 = document.getElementById('analyticsChart').getContext('2d');
-        new Chart(ctx1, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Active Users', data: [12, 19, 3, 5, 2, 3, 10], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#2a2a35' } }, x: { grid: { display: false } } } } });
-        const ctx2 = document.getElementById('licenseChart').getContext('2d');
-        new Chart(ctx2, { type: 'doughnut', data: { labels: ['Active', 'Expired', 'Used'], datasets: [{ data: [data.activeLicenses || 10, data.expiredLicenses || 5, data.usedLicenses || 3], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#8b8b9e' } } }, cutout: '70%' } });
-    }
-    
-    // ===== LOAD USERS (REAL DATA) =====
-    async function loadUsers() {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/users', {
-                headers: { 'Authorization': 'Bearer ' + token }
+        var ctx1 = document.getElementById('analyticsChart');
+        if (ctx1) {
+            if (window.analyticsChartInstance) window.analyticsChartInstance.destroy();
+            window.analyticsChartInstance = new Chart(ctx1.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Active Users',
+                        data: [1, 2, 3, 4, 5, 6, data.totalUsers || 0],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#2a2a35' }, ticks: { color: '#8b8b9e' } },
+                        x: { grid: { display: false }, ticks: { color: '#8b8b9e' } }
+                    }
+                }
             });
-            const users = await response.json();
-            const tbody = document.getElementById('users-tbody');
-            if (!tbody) return;
-            if (!Array.isArray(users) || users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">Ma jiro user</td></tr>';
-                return;
-            }
-            tbody.innerHTML = users.map(function(u) {
-                return '<tr style="border-bottom: 1px solid #2a2a35;">' +
-                    '<td style="padding: 12px;">' + u.id + '</td>' +
-                    '<td style="padding: 12px;"><strong>' + u.username + '</strong></td>' +
-                    '<td style="padding: 12px;">' + (u.fullname || '-') + '</td>' +
-                    '<td style="padding: 12px;"><span style="padding: 4px 10px; border-radius: 20px; background: ' + (u.role === 'admin' ? '#8b5cf6' : '#2a2a35') + '; font-size: 12px;">' + u.role + '</span></td>' +
-                    '<td style="padding: 12px;">' + (u.license_key || '-') + '</td>' +
-                    '<td style="padding: 12px;"><button onclick="deleteUser(' + u.id + ')" style="background: #ef4444; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;"><i class="fa-solid fa-trash"></i></button></td>' +
-                    '</tr>';
-            }).join('');
-        } catch (error) {
-            console.error('Error loading users:', error);
+        }
+        
+        var ctx2 = document.getElementById('licenseChart');
+        if (ctx2) {
+            if (window.licenseChartInstance) window.licenseChartInstance.destroy();
+            window.licenseChartInstance = new Chart(ctx2.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Unused', 'Used'],
+                    datasets: [{
+                        data: [data.unusedLicenses || 0, data.usedLicenses || 0],
+                        backgroundColor: ['#10b981', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#8b8b9e', padding: 15 } } },
+                    cutout: '70%'
+                }
+            });
         }
     }
     
-    function filterUsers() {
-        const input = document.getElementById('user-search');
-        if (!input) return;
-        const val = input.value.toLowerCase();
-        const rows = document.querySelectorAll('#users-tbody tr');
-        rows.forEach(function(row) {
-            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
-        });
-    }
     
-    async function deleteUser(id) {
-        if (!confirm('Ma hubtaa inaad tirtirto user-kan?')) return;
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('/api/admin/users/' + id, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (res.ok) loadUsers();
-            else alert('Error deleting user');
-        } catch (error) {
-            alert('Error: ' + error.message);
-        }
-    }
-    
-    // ===== LOAD LICENSES (REAL DATA) =====
-    async function loadLicenses() {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/licenses', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const licenses = await response.json();
-            const tbody = document.getElementById('licenses-tbody');
-            if (!tbody) return;
-            
-            if (!Array.isArray(licenses) || licenses.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Ma jiro license</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = licenses.map(function(l) {
-                var statusColor = l.status === 'unused' ? '#10b981' : (l.status === 'used' ? '#f59e0b' : '#ef4444');
-                return '<tr style="border-bottom: 1px solid #2a2a35;">' +
-                    '<td style="padding: 12px;"><code style="background: #1e1e28; padding: 4px 8px; border-radius: 4px; font-size: 12px;">' + l.license_key + '</code></td>' +
-                    '<td style="padding: 12px;">' + (l.user_id || '-') + '</td>' +
-                    '<td style="padding: 12px;">' + (l.duration || '-') + '</td>' +
-                    '<td style="padding: 12px;"><span style="padding: 4px 10px; border-radius: 20px; background: ' + statusColor + '20; color: ' + statusColor + '; font-size: 12px; font-weight: 600;">' + l.status + '</span></td>' +
-                    '<td style="padding: 12px;">' +
-                        '<button onclick="copyLicense(\'' + l.license_key + '\')" style="background: #8b5cf6; border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 5px;" title="Copy">' +
-                            '<i class="fa-solid fa-copy"></i>' +
-                        '</button>' +
-                        '<button onclick="deleteLicense(' + l.id + ')" style="background: #ef4444; border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer;" title="Delete">' +
-                            '<i class="fa-solid fa-trash"></i>' +
-                        '</button>' +
-                    '</td>' +
-                    '</tr>';
-            }).join('');
-        } catch (error) {
-            console.error('Error loading licenses:', error);
-        }
-    }
-    
-    async function deleteLicense(id) {
-        if (!confirm('Ma hubtaa inaad tirtirto license-kan?')) return;
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('/api/admin/licenses/' + id, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (res.ok) loadLicenses();
-            else alert('Error deleting license');
-        } catch (error) {
-            alert('Error: ' + error.message);
-        }
-    }
-    
-    function showAddUserModal() {
-        alert('Add User feature wali lama dhisin.');
-    }
-    
-    function toggleProfileMenu() {
-        const menu = document.getElementById('profile-menu');
-        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-    
-    
-    // ===== LICENSE MODAL FUNCTIONS =====
-    var selectedDays = 1;
-    
-    function showGenerateLicenseModal() {
-        var modal = document.getElementById('license-modal');
-        if (!modal) {
-            alert('Modal-ka lama helin. Fadlan dib u cusboonaysii bogga.');
+    async function editUserRole(id, currentRole) {
+        var newRole = prompt('Geli role-ka cusub (user ama admin):', currentRole);
+        if (!newRole) return;
+        if (newRole !== 'user' && newRole !== 'admin') {
+            alert('Role-ku waa inuu noqdaa "user" ama "admin"');
             return;
         }
-        modal.style.display = 'flex';
-        document.getElementById('license-quantity').value = 1;
-        document.getElementById('custom-days').style.display = 'none';
-        selectedDays = 1;
-        var btns = document.querySelectorAll('.duration-btn');
-        btns.forEach(function(b) {
-            b.classList.remove('active');
-            if (b.getAttribute('data-days') === '1') b.classList.add('active');
-        });
-    }
-    
-    function closeLicenseModal() {
-        var modal = document.getElementById('license-modal');
-        if (modal) modal.style.display = 'none';
-    }
-    
-    function selectDuration(btn, days) {
-        var btns = document.querySelectorAll('.duration-btn');
-        btns.forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        selectedDays = days;
-        var customInput = document.getElementById('custom-days');
-        if (days === 'custom') {
-            customInput.style.display = 'block';
-            customInput.focus();
-        } else {
-            customInput.style.display = 'none';
-        }
-    }
-    
-    async function generateLicenses() {
-        var days = selectedDays;
-        if (days === 'custom') {
-            days = parseInt(document.getElementById('custom-days').value);
-            if (!days || days < 1) {
-                alert('Fadlan geli tirada maalmood ee saxda ah');
-                return;
-            }
-        }
-        
-        var quantity = parseInt(document.getElementById('license-quantity').value) || 1;
-        
         try {
             var token = localStorage.getItem('token');
-            var response = await fetch('/api/licenses/bulk', {
-                method: 'POST',
+            var res = await fetch('/api/admin/users/' + id, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
                 },
-                body: JSON.stringify({ days: days, quantity: quantity })
+                body: JSON.stringify({ role: newRole })
             });
-            
-            var data = await response.json();
-            
-            if (data.success) {
-                closeLicenseModal();
-                alert(quantity + ' license(s) waa la abuuray!');
-                loadLicenses();
-            } else {
-                alert('Error: ' + (data.error || 'Unknown'));
-            }
-        } catch (error) {
-            alert('Error: ' + error.message);
-        }
-    }
-    
-    async function copyLicense(key) {
-        try {
-            await navigator.clipboard.writeText(key);
-            alert('License key waa la copy gareeyay: ' + key);
-        } catch (e) {
-            var input = document.createElement('input');
-            input.value = key;
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand('copy');
-            document.body.removeChild(input);
-            alert('License key waa la copy gareeyay: ' + key);
-        }
-    }
-    
-    
-    // ===== ADD USER FUNCTIONS =====
-    function showAddUserModal() {
-        var modal = document.getElementById('add-user-modal');
-        if (modal) {
-            modal.style.display = 'flex';
-            document.getElementById('new-username').value = '';
-            document.getElementById('new-password').value = '';
-            document.getElementById('new-fullname').value = '';
-        }
-    }
-    
-    function closeAddUserModal() {
-        var modal = document.getElementById('add-user-modal');
-        if (modal) modal.style.display = 'none';
-    }
-    
-    async function addUser() {
-        var username = document.getElementById('new-username').value.trim();
-        var password = document.getElementById('new-password').value.trim();
-        var fullname = document.getElementById('new-fullname').value.trim();
-        
-        if (!username || !password) {
-            alert('Fadlan geli username iyo password');
-            return;
-        }
-        
-        try {
-            var response = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username, password: password, fullname: fullname })
-            });
-            var data = await response.json();
-            if (data.token || data.success) {
-                closeAddUserModal();
-                alert('User cusub waa la abuuray!');
+            if (res.ok) {
+                alert('Role-ka waa la beddelay!');
                 loadUsers();
             } else {
-                alert('Error: ' + (data.error || 'Unknown'));
+                alert('Error changing role');
             }
         } catch (e) {
             alert('Error: ' + e.message);
         }
     }
     
-    async function deleteUser(id) {
-        if (!confirm('Ma hubtaa inaad tirtirto user-kan?')) return;
-        try {
-            var token = localStorage.getItem('token');
-            var res = await fetch('/api/admin/users/' + id, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (res.ok) loadUsers();
-            else alert('Error deleting user');
-        } catch (e) { alert('Error: ' + e.message); }
-    }
-    
-    async function deleteLicense(id) {
-        if (!confirm('Ma hubtaa inaad tirtirto license-kan?')) return;
-        try {
-            var token = localStorage.getItem('token');
-            var res = await fetch('/api/admin/licenses/' + id, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (res.ok) loadLicenses();
-            else alert('Error deleting license');
-        } catch (e) { alert('Error: ' + e.message); }
-    }
-    
-    function filterUsers() {
-        var input = document.getElementById('user-search');
-        if (!input) return;
-        var val = input.value.toLowerCase();
-        var rows = document.querySelectorAll('#users-tbody tr');
-        rows.forEach(function(row) {
-            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
-        });
-    }
-    
-    function toggleProfileMenu() {
-        var menu = document.getElementById('profile-menu');
-        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-    
-    document.addEventListener('click', function(e) {
-        var menu = document.getElementById('profile-menu');
-        var profile = document.querySelector('.user-profile');
-        if (menu && profile && !profile.contains(e.target)) {
-            menu.style.display = 'none';
-        }
-    });
-
-    function handleLogout() { localStorage.removeItem('token'); location.reload(); }
+function handleLogout() { localStorage.removeItem('token'); location.reload(); }
     if (localStorage.getItem('token')) { showDashboard(); }
 </script>
 
