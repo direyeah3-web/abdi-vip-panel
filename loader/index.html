@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Obsidian Bypass</title>
+<title>ABDI VIP BYPASS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -39,7 +39,7 @@ body::before{
 .logo-top i{font-size:32px;color:var(--primary);}
 .logo-top div div:first-child{font-size:18px;font-weight:800;}
 .logo-top div div:last-child{font-size:11px;color:var(--muted);}
-.obsidian-title{
+.abdi-title{
     font-size:42px;font-weight:800;margin-bottom:40px;text-align:center;
     background:linear-gradient(135deg,#a78bfa,#8b5cf6,#7c3aed);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
@@ -242,7 +242,7 @@ select:focus{border-color:var(--primary);}
     }
     .sidebar.open{left:0;}
     .menu-toggle{display:flex !important;}
-    .obsidian-title{font-size:32px;}
+    .abdi-title{font-size:32px;}
     .content{padding:15px;}
     .topbar{padding:12px 15px;}
     .topbar-left span{font-size:15px;}
@@ -262,7 +262,7 @@ select:focus{border-color:var(--primary);}
             <div>OP Gaming Tri-Chip • 165Hz • OP FPS Max</div>
         </div>
     </div>
-    <h1 class="obsidian-title">Obsidian Bypass</h1>
+    <h1 class="abdi-title">ABDI VIP BYPASS</h1>
     <div class="login-box">
         <div class="key-input-wrap">
             <input type="password" id="license-key" placeholder="Enter License Key">
@@ -282,7 +282,7 @@ select:focus{border-color:var(--primary);}
         <div class="topbar-left">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
             <i class="fa-solid fa-gem"></i>
-            <span>Obsidian Bypass</span>
+            <span>ABDI VIP BYPASS</span>
         </div>
         <div class="topbar-right">
             <div class="license-badge" id="license-badge">
@@ -510,7 +510,7 @@ select:focus{border-color:var(--primary);}
                         <div class="card-title"><i class="fa-solid fa-palette"></i> Appearance</div>
                         <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:8px;">Theme</label>
                         <select data-key="style-theme" style="margin-bottom:15px;">
-                            <option value="obsidian">Obsidian</option>
+                            <option value="obsidian">ABDI VIP</option>
                             <option value="nebula">Nebula</option>
                         </select>
                         <div class="range-row">
@@ -623,10 +623,15 @@ function toggleKeyVisibility() {
 
 async function pasteKey() {
     try {
-        var text = await navigator.clipboard.readText();
-        document.getElementById('license-key').value = text;
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            var text = await navigator.clipboard.readText();
+            document.getElementById('license-key').value = text;
+            showToast('License key waa la dhejiyay!');
+        } else {
+            showToast('Fadlan gacanta ku qor license key-ga');
+        }
     } catch(e) {
-        alert('Paste manually');
+        showToast('Fadlan gacanta ku qor license key-ga');
     }
 }
 
@@ -655,11 +660,11 @@ async function handleLogin() {
         var data = await res.json();
         
         if (data.status === true || data.valid === true || data.success === true) {
-            localStorage.setItem('obsidian_key', key);
-            localStorage.setItem('obsidian_data', JSON.stringify(data.data || data));
+            localStorage.setItem('abdi_key', key);
+            localStorage.setItem('abdi_data', JSON.stringify(data.data || data));
             btn.classList.add('success');
             btn.innerHTML = '<i class="fa-solid fa-check"></i> Login Success';
-            showToast('Welcome to Obsidian Bypass');
+            showToast('Welcome to ABDI VIP BYPASS');
             setTimeout(function() { showMainMenu(data.data || data); }, 800);
         } else {
             err.textContent = 'License key-ga waa khaldan yahay!';
@@ -722,7 +727,7 @@ function updateRange(input) {
     }
     
     // Save
-    localStorage.setItem('obsidian_' + key, val);
+    localStorage.setItem('abdi_' + key, val);
 }
 
 // ===== COLOR PICKER =====
@@ -732,7 +737,7 @@ function pickColor(el, key) {
     var idx = colors.indexOf(current);
     var next = colors[(idx + 1) % colors.length];
     el.style.background = next;
-    localStorage.setItem('obsidian_' + key, next);
+    localStorage.setItem('abdi_' + key, next);
 }
 
 // ===== LOAD ALL SETTINGS =====
@@ -740,14 +745,14 @@ function loadAllSettings() {
     // Toggles
     document.querySelectorAll('input[type="checkbox"][data-key]').forEach(function(cb) {
         var key = cb.getAttribute('data-key');
-        var saved = localStorage.getItem('obsidian_' + key);
+        var saved = localStorage.getItem('abdi_' + key);
         if (saved !== null) cb.checked = saved === 'true';
     });
     
     // Ranges
     document.querySelectorAll('input[type="range"][data-key]').forEach(function(r) {
         var key = r.getAttribute('data-key');
-        var saved = localStorage.getItem('obsidian_' + key);
+        var saved = localStorage.getItem('abdi_' + key);
         if (saved !== null) {
             r.value = saved;
             updateRange(r);
@@ -757,7 +762,7 @@ function loadAllSettings() {
     // Selects
     document.querySelectorAll('select[data-key]').forEach(function(s) {
         var key = s.getAttribute('data-key');
-        var saved = localStorage.getItem('obsidian_' + key);
+        var saved = localStorage.getItem('abdi_' + key);
         if (saved !== null) s.value = saved;
     });
 }
@@ -766,11 +771,11 @@ function loadAllSettings() {
 document.addEventListener('change', function(e) {
     if (e.target.matches('input[type="checkbox"][data-key]')) {
         var key = e.target.getAttribute('data-key');
-        localStorage.setItem('obsidian_' + key, e.target.checked);
+        localStorage.setItem('abdi_' + key, e.target.checked);
     }
     if (e.target.matches('select[data-key]')) {
         var key = e.target.getAttribute('data-key');
-        localStorage.setItem('obsidian_' + key, e.target.value);
+        localStorage.setItem('abdi_' + key, e.target.value);
     }
 });
 
@@ -782,12 +787,12 @@ function savePreset() {
         if (el.type === 'checkbox') data[key] = el.checked;
         else data[key] = el.value;
     });
-    localStorage.setItem('obsidian_preset', JSON.stringify(data));
+    localStorage.setItem('abdi_preset', JSON.stringify(data));
     showToast('Preset saved!');
 }
 
 function loadPreset() {
-    var saved = localStorage.getItem('obsidian_preset');
+    var saved = localStorage.getItem('abdi_preset');
     if (!saved) { showToast('No preset found'); return; }
     var data = JSON.parse(saved);
     Object.keys(data).forEach(function(key) {
@@ -806,8 +811,8 @@ function resetDefault() {
 }
 
 function resetGuest() {
-    localStorage.removeItem('obsidian_key');
-    localStorage.removeItem('obsidian_data');
+    localStorage.removeItem('abdi_key');
+    localStorage.removeItem('abdi_data');
     showToast('Guest reset');
     setTimeout(function() { location.reload(); }, 800);
 }
@@ -828,7 +833,7 @@ function showToast(msg) {
 
 // ===== AUTO LOGIN =====
 window.addEventListener('load', function() {
-    var savedKey = localStorage.getItem('obsidian_key');
+    var savedKey = localStorage.getItem('abdi_key');
     if (savedKey) {
         document.getElementById('license-key').value = savedKey;
         handleLogin();
