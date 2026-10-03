@@ -395,3 +395,34 @@ body::before {
   .main { padding: 16px; }
   .welcome { flex-direction: column; text-align: center; gap: 16px; }
 }
+
+/* ============ AUTH TABS ============ */
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(0,0,0,0.3);
+  padding: 6px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.auth-tab.active {
+  background: rgba(124,58,237,0.25);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(124,58,237,0.3);
+}
+.auth-tab:hover:not(.active) {
+  color: var(--text);
+}

@@ -4,19 +4,85 @@
 <title>ABDI VIP PANEL</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+
+if (tabLogin) {
+  tabLogin.onclick = () => {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    loginForm.classList.remove('hidden');
+    registerForm.classList.add('hidden');
+  };
+  tabRegister.onclick = () => {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    registerForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+  };
+}
+
+const rb = document.getElementById('rb');
+if (rb) {
+  rb.onclick = async () => {
+    const username = document.getElementById('ru').value.trim();
+    const password = document.getElementById('rp').value;
+    const fullName = document.getElementById('rf').value.trim();
+    const referral = document.getElementById('rr').value.trim();
+    if (!username || !password) {
+      return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
+    }
+    rb.disabled = true;
+    rb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, fullName, referral_code: referral })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Register failed');
+      localStorage.setItem('token', data.token);
+      Swal.fire('Guul!', 'Account la abuuray!', 'success').then(() => location.reload());
+    } catch (err) {
+      Swal.fire('Khalad', err.message, 'error');
+      rb.disabled = false;
+      rb.innerHTML = '<i class="fas fa-user-plus"></i> CREATE ACCOUNT';
+    }
+  };
+}
+
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 </style><link rel="stylesheet" href="/style.css"></head><body>
 
-<div id="loginScreen"><div class="login-box">
-<div class="login-logo"><i class="fas fa-shield-halved"></i></div>
-<h1 class="login-title">ABDI VIP PANEL</h1>
-<p class="login-sub">Sign in to access your dashboard</p>
-<div class="field"><label>Username</label><input id="lu" placeholder="Enter username"></div>
-<div class="field"><label>Password</label><input id="lp" type="password" placeholder="Enter password"></div>
-<button class="btn-primary" id="lb"><i class="fas fa-sign-in-alt"></i> SIGN IN</button>
-</div></div>
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo"><i class="fas fa-shield-halved"></i></div>
+    <h1 class="login-title">ABDI VIP PANEL</h1>
+    <p class="login-sub">Sign in to access your dashboard</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">Login</button>
+      <button class="auth-tab" id="tabRegister">Register</button>
+    </div>
+    <div id="loginForm">
+      <div class="field"><label>Username</label><input id="lu" placeholder="Enter username"></div>
+      <div class="field"><label>Password</label><input id="lp" type="password" placeholder="Enter password"></div>
+      <button class="btn-primary" id="lb"><i class="fas fa-sign-in-alt"></i> SIGN IN</button>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="field"><label>Username</label><input id="ru" placeholder="Choose username"></div>
+      <div class="field"><label>Full Name</label><input id="rf" placeholder="Your full name"></div>
+      <div class="field"><label>Password</label><input id="rp" type="password" placeholder="Create password"></div>
+      <div class="field"><label>Referral Token</label><input id="rr" placeholder="Optional"></div>
+      <button class="btn-primary" id="rb"><i class="fas fa-user-plus"></i> CREATE ACCOUNT</button>
+    </div>
+  </div>
+</div>
 
 <div id="dash" class="hidden">
 <div class="topbar">
@@ -79,8 +145,8 @@
 </main></div></div>
 
 <script>
-</script></body></html>EOF
-EOF
+</script></body></html>
 
-EOF
+
+
 ~/abdi-panel/public $
