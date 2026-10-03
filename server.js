@@ -94,16 +94,68 @@ app.post('/api/register', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = queryOne('SELECT * FROM users WHERE username = ?', [username]);
-  if (!user) return res.status(401).json({ error: 'Invalid' });
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ error: 'Invalid' });
-  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET);
-  res.json({ token, user: { username: user.username, fullname: user.fullname, role: user.role, referral_code: user.referral_code, license_key: user.license_key } });
+    try {
+        const { username, password } = req.body;
+        
+        // Xaqiiji xogta
+        if (!username || !password) {
+            return res.status(400).json({ success: false, message: 'Username iyo password waa loo baahan yahay' });
+        }
+        
+        // Raadi user-ka
+        const user = queryOne('SELECT * FROM users WHERE username = ?', [username]);
+        
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'User-ka lama helin' });
+        }
+        
+        // Hubi password-ka (si fudud - ma isticmaalno bcrypt)
+        // Haddii password-ka database-ku yahay mid bcrypt ah, isku day inaad isbarbardhigto
+        let passwordMatch = false;
+        
+        // Hubi haddii password-ku yahay bcrypt hash (wuxuu bilaabmaa $2a$ ama $2b$)
+        if (user.password && user.password.startsWith('$2')) {
+            // Waa bcrypt hash - isticmaal bcrypt.compare
+            const bcrypt = require('bcryptjs');
+            passwordMatch = await bcrypt.compare(password, user.password);
+        } else {
+            // Waa password caadi ah - isbarbardhig toos ah
+            passwordMatch = (password === user.password);
+        }
+        
+        if (!passwordMatch) {
+            return res.status(401).json({ success: false, message: 'Password-ka waa khaldan yahay' });
+        }
+        
+        // Samee token fudud (ma isticmaalno JWT)
+        const token = 'token_' + user.id + '_' + Date.now();
+        
+        // Keydi token-ka database-ka
+        try {
+            db.run("UPDATE users SET token = ? WHERE id = ?", [token, user.id]);
+            saveDB();
+        } catch(e) {
+            // Haddii column-ka token uusan jirin, iska dhaaf
+        }
+        
+        // Soo celi xogta user-ka
+        res.json({
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullname: user.fullname,
+                role: user.role,
+                referral_code: user.referral_code,
+                license_key: user.license_key
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
 });
-
-app.get('/api/stats', auth, (req, res) => { const totalUsers = queryOne('SELECT COUNT(*) as c FROM users').c; res.json({ totalUsers, activeTools: 18, totalLogs: 9842, earnings: 1248 }); });
 
 app.get('/api/me', auth, (req, res) => {
   const u = queryOne('SELECT username, fullname, role, license_key, referral_code, referred_by, created_at FROM users WHERE id = ?', [req.user.id]);
