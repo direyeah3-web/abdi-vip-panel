@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABDI VIP PANEL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+:root{--primary:#00d4ff;--secondary:#7b2ff7;--darker:#050810;--panel:rgba(10,20,40,0.85);--success:#00ff88;--danger:#ff0064;--warning:#ffaa00;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Rajdhani',sans-serif;background:radial-gradient(circle at 50% 50%,#0d1b2a 0%,#050810 100%);min-height:100vh;color:#fff;overflow-x:hidden;}
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-container{position:relative;z-index:10;width:100%;max-width:420px;}
+.brand{text-align:center;margin-bottom:25px;font-family:'Orbitron',sans-serif;display:flex;align-items:center;justify-content:center;gap:12px;}
+.brand-icon{width:45px;height:45px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 20px var(--primary);}
+.brand h1{font-size:1.4rem;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.panel{background:var(--panel);border:1px solid rgba(0,212,255,0.3);border-radius:15px;padding:30px 25px;backdrop-filter:blur(20px);box-shadow:0 0 30px rgba(0,212,255,0.15);}
+.panel h2{font-family:'Orbitron',sans-serif;color:var(--primary);text-align:center;font-size:1.1rem;letter-spacing:3px;margin-bottom:22px;}
+.form-group{margin-bottom:15px;}
+.form-group label{display:block;color:var(--primary);font-size:0.75rem;letter-spacing:2px;margin-bottom:6px;font-weight:700;text-transform:uppercase;}
+.form-group input,.form-group select{width:100%;padding:13px 15px;background:rgba(0,20,40,0.6);border:1px solid rgba(0,212,255,0.25);border-radius:8px;color:#fff;font-size:0.95rem;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 15px rgba(0,212,255,0.4);}
+.form-group select{cursor:pointer;}
+.btn{width:100%;padding:15px;background:linear-gradient(90deg,var(--primary),var(--secondary));border:none;border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:3px;cursor:pointer;text-transform:uppercase;}
+.btn:hover{box-shadow:0 0 30px var(--primary);}
+.links{text-align:center;margin-top:18px;font-size:0.8rem;}
+.links a{color:var(--primary);cursor:pointer;text-decoration:none;}
+.links p{margin-top:8px;color:rgba(255,255,255,0.5);}
+.msg{padding:10px;border-radius:8px;font-size:0.85rem;text-align:center;margin-bottom:15px;display:none;}
+.msg.err{background:rgba(255,0,100,0.15);border:1px solid var(--danger);color:var(--danger);}
+.msg.ok{background:rgba(0,255,136,0.15);border:1px solid var(--success);color:var(--success);}
+.dash{display:none;min-height:100vh;background:var(--darker);}
+.dash.active{display:block;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;background:rgba(10,20,40,0.95);border-bottom:1px solid rgba(0,212,255,0.15);position:sticky;top:0;z-index:100;}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:1rem;}
+.topbar-brand .icon{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.menu-btn{width:36px;height:36px;border-radius:8px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;}
+.logout-btn{width:36px;height:36px;border-radius:8px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.sidebar{position:fixed;top:0;left:-280px;width:260px;height:100vh;background:rgba(5,10,20,0.98);border-right:1px solid rgba(0,212,255,0.15);z-index:200;transition:left 0.3s;padding:20px;overflow-y:auto;}
+.sidebar.open{left:0;}
+.sidebar h3{font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:3px;color:rgba(255,255,255,0.4);margin:15px 0 8px;}
+.sidebar .nav-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;color:rgba(255,255,255,0.7);cursor:pointer;font-size:0.9rem;margin-bottom:4px;}
+.sidebar .nav-item:hover,.sidebar .nav-item.active{background:rgba(0,212,255,0.1);color:var(--primary);}
+.sidebar .nav-item .ico{font-size:1.1rem;width:20px;text-align:center;}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;display:none;}
+.sidebar-overlay.show{display:block;}
+.dash-container{padding:20px;max-width:1200px;margin:0 auto;}
+.dash-header{margin-bottom:25px;}
+.dash-header h1{font-family:'Orbitron',sans-serif;font-size:1.6rem;letter-spacing:2px;margin-bottom:5px;}
+.dash-header p{color:rgba(255,255,255,0.6);font-size:0.95rem;}
+.dash-header p span{color:var(--primary);font-weight:700;}
+.welcome-card{background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(123,47,247,0.15));border:1px solid rgba(0,212,255,0.3);border-radius:15px;padding:25px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.welcome-text h2{font-family:'Orbitron',sans-serif;font-size:1.3rem;margin-bottom:5px;}
+.welcome-text h2 span{color:var(--primary);}
+.welcome-text p{color:rgba(255,255,255,0.7);font-size:0.9rem;}
+.shield{width:80px;height:80px;border-radius:50%;border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 0 30px rgba(0,212,255,0.5);}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:25px;}
+.stat-card{background:rgba(10,20,40,0.7);border:1px solid rgba(0,212,255,0.15);border-radius:12px;padding:18px;}
+.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:10px;}
+.blue{background:rgba(0,150,255,0.2);color:#0096ff;}
+.green{background:rgba(0,255,136,0.2);color:#00ff88;}
+.purple{background:rgba(123,47,247,0.2);color:#7b2ff7;}
+.orange{background:rgba(255,170,0,0.2);color:#ffaa00;}
+.stat-label{color:rgba(255,255,255,0.6);font-size:0.7rem;letter-spacing:2px;margin-bottom:5px;}
+.stat-value{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:3px;}
+.stat-change{font-size:0.75rem;color:var(--success);}
+.section{background:rgba(10,20,40,0.7);border:1px solid rgba(0,212,255,0.15);border-radius:12px;padding:22px;margin-bottom:20px;}
+.section-title{display:flex;align-items:center;gap:10px;font-family:'Orbitron',sans-serif;font-size:1rem;letter-spacing:2px;margin-bottom:18px;}
+.section-title .dot{width:8px;height:8px;background:var(--primary);border-radius:50%;box-shadow:0 0 20px var(--primary);}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,212,255,0.08);font-size:0.9rem;gap:10px;}
+.info-row:last-child{border-bottom:none;}
+.info-row .key{color:rgba(255,255,255,0.6);}
+.info-row .val{color:#fff;font-weight:500;}
+.info-row .val.primary{color:var(--primary);}
+.manage-btn{width:100%;margin-top:15px;padding:14px;background:linear-gradient(90deg,var(--primary),var(--secondary));border:none;border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:2px;cursor:pointer;}
+.referral-box{background:rgba(0,212,255,0.05);border:1px dashed rgba(0,212,255,0.4);border-radius:10px;padding:15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+.referral-code{font-family:'Orbitron',sans-serif;color:var(--primary);font-size:1.1rem;letter-spacing:3px;font-weight:700;}
+.copy-btn{padding:8px 16px;background:rgba(0,212,255,0.15);border:1px solid var(--primary);border-radius:6px;color:var(--primary);font-size:0.75rem;letter-spacing:2px;cursor:pointer;font-weight:700;}
+.referral-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:15px;}
+.ref-stat{background:rgba(0,212,255,0.05);border-radius:8px;padding:12px;text-align:center;}
+.ref-stat .label{color:rgba(255,255,255,0.6);font-size:0.7rem;letter-spacing:1px;margin-bottom:5px;}
+.ref-stat .value{font-family:'Orbitron',sans-serif;font-size:1.3rem;color:var(--primary);margin-bottom:3px;}
+.profile-card{background:rgba(10,20,40,0.7);border:1px solid rgba(0,212,255,0.15);border-radius:12px;padding:20px;text-align:center;margin-top:20px;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 0 30px rgba(0,212,255,0.5);}
+.profile-card h3{font-family:'Orbitron',sans-serif;letter-spacing:2px;margin-bottom:5px;}
+.profile-card .role{color:var(--primary);font-size:0.8rem;letter-spacing:2px;margin-bottom:12px;}
+.admin-badge{display:inline-block;padding:5px 15px;background:rgba(123,47,247,0.2);border:1px solid var(--secondary);border-radius:20px;color:#b47aff;font-size:0.7rem;letter-spacing:2px;font-weight:700;}
+.footer{text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:0.75rem;letter-spacing:1px;border-top:1px solid rgba(0,212,255,0.08);margin-top:20px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+.modal-box{background:linear-gradient(135deg,#0a1428,#050810);border:1px solid var(--primary);border-radius:15px;padding:25px;max-width:450px;width:100%;box-shadow:0 0 40px rgba(0,212,255,0.4);}
+.modal-box h3{font-family:'Orbitron',sans-serif;color:var(--primary);letter-spacing:2px;margin-bottom:15px;font-size:1rem;}
+.modal-box p{color:#fff;font-size:0.9rem;line-height:1.6;}
+.modal-close{width:100%;margin-top:20px;padding:12px;background:linear-gradient(90deg,var(--primary),var(--secondary));border:none;border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:2px;cursor:pointer;}
+.small-btn{padding:6px 12px;border-radius:6px;font-size:0.7rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:1px solid;font-family:'Orbitron',sans-serif;}
+.danger{background:rgba(255,0,100,0.15);border-color:var(--danger);color:var(--danger);}
+.warn{background:rgba(255,170,0,0.15);border-color:var(--warning);color:var(--warning);}
+</style>
+</head>
+<body>
+
+<div class="auth" id="loginScreen">
+  <div class="auth-container">
+    <div class="brand"><div class="brand-icon">🛡️</div><h1>ABDI VIP PANEL</h1></div>
+    <div class="panel">
+      <h2>SYSTEM LOGIN</h2>
+      <div class="msg err" id="logErr"></div>
+      <div class="form-group"><label>USERNAME</label><input type="text" id="username" placeholder="Enter username"></div>
+      <div class="form-group"><label>PASSWORD</label><input type="password" id="password" placeholder="Enter password"></div>
+      <button class="btn" onclick="doLogin()">ACCESS SYSTEM</button>
+      <div class="links"><p>DON'T HAVE AN ACCOUNT? <a onclick="showRegister()">REGISTER HERE</a></p></div>
+    </div>
+  </div>
+</div>
+
+<div class="auth" id="registerScreen" style="display:none;">
+  <div class="auth-container">
+    <div class="brand"><div class="brand-icon">🛡️</div><h1>ABDI VIP PANEL</h1></div>
+    <div class="panel">
+      <h2>REGISTRATION</h2>
+      <div class="msg err" id="regErr"></div>
+      <div class="msg ok" id="regOk"></div>
+      <div class="form-group"><label>USERNAME</label><input type="text" id="regUser" placeholder="Username"></div>
+      <div class="form-group"><label>FULLNAME</label><input type="text" id="regFull" placeholder="Full name"></div>
+      <div class="form-group"><label>PASSWORD</label><input type="password" id="regPass" placeholder="Password"></div>
+      <div class="form-group"><label>LICENSE KEY</label><input type="text" id="regLic" placeholder="ABDI-VIP-XXXX"></div>
+      <div class="form-group"><label>REFERRAL CODE</label><input type="text" id="regRef" placeholder="Who invited you?"></div>
+      <button class="btn" onclick="doRegister()">REGISTER</button>
+      <div class="links"><p>ALREADY HAVE AN ACCOUNT? <a onclick="showLogin()">LOGIN HERE</a></p></div>
+    </div>
+  </div>
+</div>
+
+<div class="dash" id="dashboard">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="brand" style="margin-bottom:20px;"><div class="brand-icon" style="width:36px;height:36px;font-size:1.2rem;">🛡️</div><h1 style="font-size:1rem;">ABDI VIP</h1></div>
+    <h3>NAVIGATION</h3>
+    <div class="nav-item active" onclick="navTo('dashboard', this)"><span class="ico">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="navTo('users', this)"><span class="ico">👥</span>Users</div>
+    <div class="nav-item" onclick="navTo('tools', this)"><span class="ico">🔧</span>Tools</div>
+    <div class="nav-item" onclick="navTo('logs', this)"><span class="ico">📋</span>Logs</div>
+    <div class="nav-item" onclick="navTo('settings', this)"><span class="ico">⚙️</span>Settings</div>
+    <h3>MANAGE</h3>
+    <div class="nav-item" onclick="navTo('licenses', this)"><span class="ico">🔑</span>Licenses</div>
+    <div class="nav-item" onclick="navTo('referrals', this)"><span class="ico">🔗</span>Referrals</div>
+    <div class="nav-item" onclick="navTo('support', this)"><span class="ico">💬</span>Support</div>
+  </div>
+
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+      <div class="topbar-brand"><div class="icon">🛡️</div>ABDI VIP PANEL</div>
+    </div>
+    <div class="logout-btn" onclick="logout()">⎋</div>
+  </div>
+
+  <div class="dash-container">
+    <div id="page-dashboard">
+      <div class="dash-header"><h1>Dashboard</h1><p>Welcome back, <span id="dashUser">User</span>.</p></div>
+      <div class="welcome-card">
+        <div class="welcome-text"><h2>Welcome back,<br><span id="dashUser2">User</span></h2><p>You're in control.</p></div>
+        <div class="shield">🛡️</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon blue">👥</div><div class="stat-label">TOTAL USERS</div><div class="stat-value" id="statUsers">0</div><div class="stat-change">Live</div></div>
+        <div class="stat-card"><div class="stat-icon green">🔑</div><div class="stat-label">TOTAL LICENSES</div><div class="stat-value" id="statLic">0</div><div class="stat-change">Live</div></div>
+        <div class="stat-card"><div class="stat-icon purple">✅</div><div class="stat-label">USED LICENSES</div><div class="stat-value" id="statUsed">0</div><div class="stat-change">Live</div></div>
+        <div class="stat-card"><div class="stat-icon orange">🔗</div><div class="stat-label">REFERRALS</div><div class="stat-value" id="statRef">0</div><div class="stat-change">Live</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title"><span class="dot"></span>Account Information</div>
+        <div class="info-row"><span class="key">Username</span><span class="val primary" id="infoUser">---</span></div>
+        <div class="info-row"><span class="key">Full Name</span><span class="val" id="infoFull">---</span></div>
+        <div class="info-row"><span class="key">License</span><span class="val primary" id="infoLic">---</span></div>
+        <div class="info-row"><span class="key">Referral</span><span class="val primary" id="infoRef">---</span></div>
+        <div class="info-row"><span class="key">Account Type</span><span class="val" id="infoRole">---</span></div>
+        <div class="info-row"><span class="key">Member Since</span><span class="val" id="infoSince">---</span></div>
+      </div>
+      <div class="section">
+        <div class="section-title"><span class="dot"></span>Referral Program</div>
+        <div class="referral-box"><span class="referral-code" id="refCode2">---</span><button class="copy-btn" onclick="copyCode()">COPY</button></div>
+        <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:15px;">Share your code and earn 20% from every referral.</p>
+        <div class="referral-stats">
+          <div class="ref-stat"><div class="label">TOTAL REFERRALS</div><div class="value" id="refCount">0</div></div>
+          <div class="ref-stat"><div class="label">TOTAL EARNED</div><div class="value" id="refEarn">$0.00</div></div>
+        </div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <h3 id="profileName">User</h3>
+        <div class="role" id="profileRole">User</div>
+        <div class="admin-badge" id="profileBadge">USER</div>
+      </div>
+      <div class="footer">© Wed 30-Sep 2026 – ABDI VIP PANEL</div>
+    </div>
+
+    <div id="page-users" style="display:none;">
+      <div class="dash-header"><h1>Users</h1><p>Manage all users</p></div>
+      <div class="section" id="usersList"><p style="color:rgba(255,255,255,0.5)">Loading...</p></div>
+    </div>
+
+    <div id="page-tools" style="display:none;">
+      <div class="dash-header"><h1>Tools</h1><p>Active system tools</p></div>
+      <div class="section"><div class="section-title"><span class="dot"></span>Available Tools</div>
+        <div class="info-row"><span class="key">Tool 1</span><span class="val" style="color:#00ff88">Online</span></div>
+        <div class="info-row"><span class="key">Tool 2</span><span class="val" style="color:#00ff88">Online</span></div>
+        <div class="info-row"><span class="key">Tool 3</span><span class="val" style="color:#ffaa00">Idle</span></div>
+      </div>
+    </div>
+
+    <div id="page-logs" style="display:none;">
+      <div class="dash-header"><h1>Logs</h1><p>System activity</p></div>
+      <div class="section" id="logsList"><p style="color:rgba(255,255,255,0.5)">Loading...</p></div>
+    </div>
+
+    <div id="page-settings" style="display:none;">
+      <div class="dash-header"><h1>Settings</h1><p>System configuration</p></div>
+      <div class="section">
+        <div class="info-row"><span class="key">Server</span><span class="val">localhost:3000</span></div>
+        <div class="info-row"><span class="key">Version</span><span class="val">v3.0</span></div>
+        <div class="info-row"><span class="key">Status</span><span class="val" style="color:#00ff88">ONLINE</span></div>
+      </div>
+    </div>
+
+    <div id="page-licenses" style="display:none;">
+      <div class="dash-header"><h1>Licenses</h1><p>Generate & manage license keys</p></div>
+      <div class="section">
+        <div class="section-title"><span class="dot"></span>Generate Single License</div>
+        <div class="form-group">
+          <label>DURATION</label>
+          <select id="licDuration">
+            <option value="1 hour">1 Hour</option>
+            <option value="5 hours">5 Hours</option>
+            <option value="1 day">1 Day</option>
+            <option value="7 days">7 Days</option>
+            <option value="30 days" selected>30 Days</option>
+            <option value="90 days">90 Days</option>
+            <option value="365 days">365 Days</option>
+          </select>
+        </div>
+        <div class="form-group"><label>MAX DEVICES</label><input type="number" id="licMaxDevices" value="1" min="1" max="10"></div>
+        <div class="form-group"><label>CUSTOM KEY (optional)</label><input type="text" id="licCustom" placeholder="Leave blank for auto-generate"></div>
+        <button class="manage-btn" onclick="genLicense()">+ GENERATE NEW LICENSE</button>
+      </div>
+      <div class="section">
+        <div class="section-title"><span class="dot"></span>Bulk Generate</div>
+        <div class="form-group"><label>COUNT</label><input type="number" id="bulkCount" value="10" min="1" max="100"></div>
+        <div class="form-group"><label>DURATION</label>
+          <select id="bulkDuration">
+            <option value="1 day">1 Day</option>
+            <option value="7 days">7 Days</option>
+            <option value="30 days" selected>30 Days</option>
+            <option value="365 days">365 Days</option>
+          </select>
+        </div>
+        <div class="form-group"><label>MAX DEVICES</label><input type="number" id="bulkMaxDevices" value="1" min="1" max="10"></div>
+        <button class="manage-btn" onclick="bulkGenLicense()">⚡ BULK GENERATE</button>
+      </div>
+      <div class="section" id="licensesList"><p style="color:rgba(255,255,255,0.5)">Loading...</p></div>
+    </div>
+
+    <div id="page-referrals" style="display:none;">
+      <div class="dash-header"><h1>Referrals</h1><p>Your referral network</p></div>
+      <div class="section">
+        <div class="referral-box"><span class="referral-code" id="refPageCode">---</span><button class="copy-btn" onclick="copyCode()">COPY</button></div>
+        <div id="refList"><p style="color:rgba(255,255,255,0.5)">Loading...</p></div>
+      </div>
+    </div>
+
+    <div id="page-support" style="display:none;">
+      <div class="dash-header"><h1>Support</h1><p>Get help</p></div>
+      <div class="section">
+        <p style="padding:10px 0;">Contact: <span style="color:#00d4ff;">support@abdivip.panel</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let TOKEN = localStorage.getItem('abdi_token') || '';
+let USER = JSON.parse(localStorage.getItem('abdi_user') || 'null');
+
+function show(id, text, type) {
+  var el = document.getElementById(id);
+  el.textContent = text; el.style.display = 'block'; el.className = 'msg ' + type;
+}
+function showRegister() { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('registerScreen').style.display = 'flex'; }
+function showLogin() { document.getElementById('registerScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; }
+
+async function api(path, method, body) {
+  const opts = { method: method || 'GET', headers: { 'Content-Type': 'application/json' } };
+  if (TOKEN) opts.headers['Authorization'] = 'Bearer ' + TOKEN;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  document.getElementById('logErr').style.display = 'none';
+  if (!username || !password) return show('logErr', 'Fill all fields', 'err');
+  try {
+    const data = await api('/api/login', 'POST', { username, password });
+    TOKEN = data.token; USER = data.user;
+    localStorage.setItem('abdi_token', TOKEN); localStorage.setItem('abdi_user', JSON.stringify(USER));
+    enterDashboard();
+  } catch (e) { show('logErr', e.message, 'err'); }
+}
+
+async function doRegister() {
+  const username = document.getElementById('regUser').value.trim();
+  const fullname = document.getElementById('regFull').value.trim();
+  const password = document.getElementById('regPass').value;
+  const license_key = document.getElementById('regLic').value.trim().toUpperCase();
+  const referral_code = document.getElementById('regRef').value.trim().toUpperCase();
+  document.getElementById('regErr').style.display = 'none';
+  if (!username || !password) return show('regErr', 'Username & password required', 'err');
+  try {
+    const data = await api('/api/register', 'POST', { username, password, fullname, license_key, referral_code });
+    TOKEN = data.token; USER = data.user;
+    localStorage.setItem('abdi_token', TOKEN); localStorage.setItem('abdi_user', JSON.stringify(USER));
+    show('regOk', 'Account created!', 'ok');
+    setTimeout(enterDashboard, 700);
+  } catch (e) { show('regErr', e.message, 'err'); }
+}
+
+function enterDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('registerScreen').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+  loadDashboard();
+}
+
+async function loadDashboard() {
+  try {
+    const me = await api('/api/me');
+    document.getElementById('dashUser').textContent = me.username;
+    document.getElementById('dashUser2').textContent = me.username;
+    document.getElementById('infoUser').textContent = me.username;
+    document.getElementById('infoFull').textContent = me.fullname || '---';
+    document.getElementById('infoLic').textContent = me.license_key || '---';
+    document.getElementById('infoRef').textContent = me.referral_code || '---';
+    document.getElementById('infoRole').textContent = me.role;
+    document.getElementById('infoSince').textContent = (me.created_at || '').split('T')[0] || '---';
+    document.getElementById('profileName').textContent = me.username;
+    document.getElementById('profileRole').textContent = me.role;
+    document.getElementById('profileBadge').textContent = me.role.toUpperCase();
+    document.getElementById('refCode2').textContent = me.referral_code;
+    document.getElementById('refPageCode').textContent = me.referral_code;
+    document.getElementById('refCount').textContent = me.referrals;
+    document.getElementById('refEarn').textContent = '$' + me.earnings;
+    if (me.role === 'admin') {
+      try {
+        const stats = await api('/api/admin/stats');
+        document.getElementById('statUsers').textContent = stats.totalUsers;
+        document.getElementById('statLic').textContent = stats.totalLicenses;
+        document.getElementById('statUsed').textContent = stats.usedLicenses;
+        document.getElementById('statRef').textContent = stats.totalReferrals;
+      } catch (e) {}
+    }
+  } catch (e) {}
+}
+
+function logout() {
+  TOKEN = ''; USER = null;
+  localStorage.removeItem('abdi_token'); localStorage.removeItem('abdi_user');
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+async function navTo(page, el) {
+  document.querySelectorAll('.nav-item').forEach(function(x){ x.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  document.querySelectorAll('[id^="page-"]').forEach(function(x){ x.style.display = 'none'; });
+  document.getElementById('page-' + page).style.display = 'block';
+  if (window.innerWidth < 900) toggleSidebar();
+  if (page === 'users') loadUsers();
+  if (page === 'logs') loadLogs();
+  if (page === 'licenses') loadLicenses();
+  if (page === 'referrals') loadReferrals();
+}
+
+async function loadUsers() {
+  try {
+    const users = await api('/api/admin/users');
+    document.getElementById('usersList').innerHTML = users.map(function(u){
+      return '<div class="info-row"><span class="key">' + u.username + ' <span style="color:rgba(255,255,255,0.4);font-size:0.75rem">(' + u.role + ')</span></span><span class="val"><button class="small-btn warn" onclick="toggleRole(' + u.id + ',\'' + u.role + '\')">' + (u.role === 'admin' ? 'Demote' : 'Promote') + '</button> <button class="small-btn danger" onclick="deleteUser(' + u.id + ')">Delete</button></span></div>';
+    }).join('') || '<p style="color:rgba(255,255,255,0.5)">No users</p>';
+  } catch (e) { document.getElementById('usersList').innerHTML = '<p style="color:#ff0064">' + e.message + '</p>'; }
+}
+
+async function toggleRole(id, role) {
+  const newRole = role === 'admin' ? 'user' : 'admin';
+  try { await api('/api/admin/users/' + id, 'PUT', { role: newRole }); loadUsers(); } catch (e) { alert(e.message); }
+}
+async function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  try { await api('/api/admin/users/' + id, 'DELETE'); loadUsers(); } catch (e) { alert(e.message); }
+}
+async function loadLogs() {
+  try {
+    const logs = await api('/api/logs');
+    document.getElementById('logsList').innerHTML = logs.map(function(l){
+      return '<p style="font-family:monospace;font-size:0.85rem;color:#00ff88;padding:5px 0;">[' + l.level + '] ' + l.msg + '</p>';
+    }).join('');
+  } catch (e) {}
+}
+async function loadLicenses() {
+  try {
+    const list = await api('/api/licenses');
+    document.getElementById('licensesList').innerHTML = list.map(function(l){
+      var exp = l.expires_at ? new Date(l.expires_at).toLocaleString() : '---';
+      var expired = l.expires_at && new Date(l.expires_at) < new Date() ? ' <span style="color:#ff0064">(EXPIRED)</span>' : '';
+      return '<div class="info-row"><span class="key" style="font-family:monospace;font-size:0.8rem">' + l.license_key + '<br><span style="color:rgba(255,255,255,0.5);font-size:0.7rem">' + (l.duration || '---') + ' | Exp: ' + exp + expired + '</span></span><span class="val"><span style="color:' + (l.status === 'unused' ? '#00ff88' : '#ffaa00') + '">' + l.status.toUpperCase() + '</span> <button class="small-btn danger" onclick="deleteLicense(' + l.id + ')">×</button></span></div>';
+    }).join('') || '<p style="color:rgba(255,255,255,0.5)">No licenses yet.</p>';
+  } catch (e) {}
+}
+async function deleteLicense(id) {
+  if (!confirm('Delete this license?')) return;
+  try { await api('/api/admin/licenses/' + id, 'DELETE'); loadLicenses(); } catch (e) { alert(e.message); }
+}
+async function loadReferrals() {
+  try {
+    const list = await api('/api/referrals');
+    document.getElementById('refList').innerHTML = list.map(function(r){
+      return '<div class="info-row"><span class="key">' + r.referred_user + '</span><span class="val primary">' + (r.created_at || '').split('T')[0] + '</span></div>';
+    }).join('') || '<p style="color:rgba(255,255,255,0.5)">No referrals yet</p>';
+  } catch (e) {}
+}
+async function genLicense() {
+  const duration = document.getElementById('licDuration').value;
+  const maxDevices = document.getElementById('licMaxDevices').value;
+  const customKey = document.getElementById('licCustom').value.trim();
+  try {
+    const body = { duration: duration, max_devices: maxDevices };
+    if (customKey) body.custom_key = customKey.toUpperCase();
+    const data = await api('/api/licenses/generate', 'POST', body);
+    openModal('LICENSE GENERATED',
+      '<p style="font-family:monospace;color:#00d4ff;font-size:1rem;text-align:center;padding:15px;background:rgba(0,212,255,0.1);border-radius:8px;word-break:break-all;">' + data.license_key + '</p>' +
+      '<p style="margin-top:10px;color:#fff;"><b>Duration:</b> ' + data.duration + '</p>' +
+      '<p style="color:#fff;"><b>Max Devices:</b> ' + data.max_devices + '</p>' +
+      '<p style="color:#ffaa00;"><b>Expires:</b> ' + new Date(data.expires_at).toLocaleString() + '</p>');
+    loadLicenses();
+  } catch (e) { openModal('ERROR', '<p style="color:#ff0064">' + e.message + '</p>'); }
+}
+async function bulkGenLicense() {
+  const count = document.getElementById('bulkCount').value;
+  const duration = document.getElementById('bulkDuration').value;
+  const maxDevices = document.getElementById('bulkMaxDevices').value;
+  try {
+    const data = await api('/api/admin/licenses/bulk', 'POST', { count, duration, max_devices: maxDevices });
+    openModal('BULK GENERATED',
+      '<p style="color:#00ff88;"><b>' + data.count + '</b> licenses created</p>' +
+      '<p style="font-family:monospace;font-size:0.75rem;color:#00d4ff;max-height:200px;overflow-y:auto;background:rgba(0,212,255,0.1);padding:10px;border-radius:8px;margin-top:10px;">' + data.keys.join('<br>') + '</p>');
+    loadLicenses();
+  } catch (e) { openModal('ERROR', '<p style="color:#ff0064">' + e.message + '</p>'); }
+}
+function copyCode() {
+  var code = document.getElementById('refCode2').textContent;
+  navigator.clipboard.writeText(code);
+  alert('Copied: ' + code);
+}
+function openModal(title, content) {
+  var old = document.getElementById('axiomModal');
+  if (old) old.remove();
+  var modal = document.createElement('div');
+  modal.id = 'axiomModal'; modal.className = 'modal-overlay';
+  modal.innerHTML = '<div class="modal-box"><h3>' + title + '</h3><div>' + content + '</div><button class="modal-close" onclick="document.getElementById(\'axiomModal\').remove()">CLOSE</button></div>';
+  document.body.appendChild(modal);
+}
+window.addEventListener('load', function() { if (TOKEN && USER) enterDashboard(); });
+</script>
+</body>
+</html>

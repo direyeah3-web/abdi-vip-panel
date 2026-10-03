@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "375479493350",
+    "firebase_url": "https://abdi-vip-panel-default-rtdb.firebaseio.com",
+    "project_id": "abdi-vip-panel",
+    "storage_bucket": "abdi-vip-panel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375479493350:android:aa0b07a08a45de837fd127",
+        "android_client_info": {
+          "package_name": "com.pubgm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZzHgapJZgq7iz2fkSbt4cvo9idmy5c0w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
