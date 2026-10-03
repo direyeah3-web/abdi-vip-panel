@@ -120,8 +120,10 @@ function loaderAuth(req, res) {
   if (lic.status === 'unused') { db.run('UPDATE licenses SET status = ?, device_id = ?, used_at = CURRENT_TIMESTAMP WHERE id = ?', ['used', device_id || null, lic.id]); saveDB(); }
   const token = jwt.sign({ license: licKey, device: device_id, expires: lic.expires_at }, SECRET, { expiresIn: '30d' });
   res.json({ isValid: true, valid: true, success: true, status: 'success',
+      success: true,
+      is_valid: true,
       state: 'online',
-      message: '', token, expires_at: lic.expires_at, duration: lic.duration, message: 'Loader authenticated' });
+      message: 'License valid', token, expires_at: lic.expires_at, duration: lic.duration, message: 'Loader authenticated' });
 }
 
 app.post('/api/loader/auth', loaderAuth);
@@ -289,8 +291,10 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
 
     res.json({
       status: 'success',
+      success: true,
+      is_valid: true,
       state: 'online',
-      message: '',
+      message: 'License valid',
       appStatus: 'active',
       httpCode: 200,
       message: 'License valid',
