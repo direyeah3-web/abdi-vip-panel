@@ -467,5 +467,31 @@ if (process.env.SEED_DATA === 'true') {
     }
 }
 
+
+// ===== BULK GENERATE LICENSES =====
+app.post('/api/licenses/bulk', auth, (req, res) => {
+    try {
+        const { days, quantity } = req.body;
+        const qty = parseInt(quantity) || 1;
+        const durationDays = parseInt(days) || 30;
+        
+        const generated = [];
+        for (let i = 0; i < qty; i++) {
+            const licenseKey = 'ABDI-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+            
+            db.run("INSERT INTO licenses (license_key, duration, status, expires_at) VALUES (?, ?, ?, ?)", 
+                [licenseKey, durationDays + ' days', 'unused', expiresAt.toISOString()]);
+            generated.push(licenseKey);
+        }
+        saveDB();
+        
+        res.json({ success: true, licenses: generated, count: generated.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => console.log('ABDI VIP PANEL running on port ' + PORT));
 });
