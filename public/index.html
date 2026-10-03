@@ -251,6 +251,47 @@ document.addEventListener('DOMContentLoaded', function() {
   loadStats();
 });
 
+
+document.addEventListener('DOMContentLoaded', function() {
+  const lb = document.getElementById('lb');
+  if (!lb) return;
+
+  lb.onclick = async () => {
+    const username = document.getElementById('lu').value.trim();
+    const password = document.getElementById('lp').value;
+    if (!username || !password) {
+      return Swal.fire('Khalad', 'Username iyo password waa loo baahan yahay', 'error');
+    }
+    lb.disabled = true;
+    lb.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      localStorage.setItem('token', data.token);
+      Swal.fire('Guul!', 'Waad soo gashay!', 'success').then(() => location.reload());
+    } catch (err) {
+      Swal.fire('Khalad', err.message, 'error');
+      lb.disabled = false;
+      lb.innerHTML = '<i class="fas fa-sign-in-alt"></i> SIGN IN';
+    }
+  };
+});
+
+
+
+// Auto-show dashboard if token exists
+if (localStorage.getItem('token')) {
+  const ls = document.getElementById('loginScreen');
+  const ds = document.getElementById('dash');
+  if (ls) ls.classList.add('hidden');
+  if (ds) ds.classList.remove('hidden');
+}
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
