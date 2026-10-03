@@ -663,5 +663,53 @@ function handleLogout() { localStorage.removeItem('token'); location.reload(); }
     </a>
 </div>
 
+<script>
+// Generate License - raadi button text
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const text = btn.textContent.trim();
+  
+  if (text.includes('Generate License')) {
+    generateLicense();
+  }
+  if (text.includes('Add User')) {
+    Swal.fire('Coming soon', 'Add User feature', 'info');
+  }
+  if (text.includes('Export')) {
+    Swal.fire('Coming soon', 'Export feature', 'info');
+  }
+  if (text.includes('Refresh')) {
+    location.reload();
+  }
+});
+
+async function generateLicense() {
+  const { value: count } = await Swal.fire({
+    title: 'Generate Licenses',
+    input: 'number',
+    inputValue: 1,
+    inputLabel: 'How many?',
+    showCancelButton: true
+  });
+  if (!count) return;
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/admin/licenses/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ count: parseInt(count), duration: '30 days', max_devices: 1 })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      Swal.fire('Guul!', data.count + ' licenses la abuuray', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      Swal.fire('Khalad', data.error || 'Failed', 'error');
+    }
+  } catch(e) { Swal.fire('Khalad', e.message, 'error'); }
+}
+
+</script>
 </body>
 </html>
