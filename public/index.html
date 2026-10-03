@@ -180,7 +180,7 @@
             const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
             const data = await response.json();
             if (data.success) { localStorage.setItem('token', data.token); showDashboard(); }
-            else { alert('Login failed: ' + data.message); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Enter console'; btn.disabled = false; }
+            else { alert('Login failed: ' + (data.message || data.error || 'Invalid credentials')); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Enter console'; btn.disabled = false; }
         } catch (error) { alert('Server error.'); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Enter console'; btn.disabled = false; }
     }
     async function handleRegister(event) {
@@ -194,7 +194,7 @@
             const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, referral }) });
             const data = await response.json();
             if (data.success) { alert('Account created! Please login.'); switchTab('login'); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Create account'; btn.disabled = false; }
-            else { alert('Registration failed: ' + data.message); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Create account'; btn.disabled = false; }
+            else { alert('Registration failed: ' + (data.message || data.error || 'Registration failed')); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Create account'; btn.disabled = false; }
         } catch (error) { alert('Server error.'); btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Create account'; btn.disabled = false; }
     }
     function showDashboard() {
