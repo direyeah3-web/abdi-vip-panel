@@ -240,17 +240,53 @@
     async function fetchStats() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+            const response = await fetch('/api/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            
             const data = await response.json();
+            console.log('Stats data:', data);
+            
             const statsGrid = document.getElementById('stats-grid');
+            if (!statsGrid) return;
+            
             statsGrid.innerHTML = `
-                <div class="stat-card"><span class="title">Total Users</span><span class="value">${data.totalUsers || 0}</span><span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span></div>
-                <div class="stat-card"><span class="title">Total Licenses</span><span class="value">${data.totalLicenses || 0}</span><span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span></div>
-                <div class="stat-card"><span class="title">Used Licenses</span><span class="value">${data.usedLicenses || 0}</span><span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span></div>
-                <div class="stat-card"><span class="title">Referrals</span><span class="value">${data.referrals || 0}</span><span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span></div>`;
+                <div class="stat-card">
+                    <span class="title">Total Users</span>
+                    <span class="value">${data.totalUsers || 0}</span>
+                    <span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span>
+                </div>
+                <div class="stat-card">
+                    <span class="title">Total Licenses</span>
+                    <span class="value">${data.totalLicenses || 0}</span>
+                    <span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span>
+                </div>
+                <div class="stat-card">
+                    <span class="title">Used Licenses</span>
+                    <span class="value">${data.usedLicenses || 0}</span>
+                    <span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span>
+                </div>
+                <div class="stat-card">
+                    <span class="title">Referrals</span>
+                    <span class="value">${data.totalReferrals || 0}</span>
+                    <span class="trend"><i class="fa-solid fa-arrow-up"></i> Live</span>
+                </div>
+            `;
+            
             renderCharts(data);
-        } catch (error) { console.error('Error fetching stats:', error); }
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+            const statsGrid = document.getElementById('stats-grid');
+            if (statsGrid) {
+                statsGrid.innerHTML = '<div class="stat-card"><span class="title">Error</span><span class="value">—</span></div>';
+            }
+        }
     }
+    
     function renderCharts(data) {
         const ctx1 = document.getElementById('analyticsChart').getContext('2d');
         new Chart(ctx1, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Active Users', data: [12, 19, 3, 5, 2, 3, 10], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#2a2a35' } }, x: { grid: { display: false } } } } });
