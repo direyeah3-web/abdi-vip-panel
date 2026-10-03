@@ -318,14 +318,66 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
 });
 
 app.get('/ObsidianAuth/api.php', (req, res) => {
-  if (req.query.action === 'release_manifest') {
-    return res.json({
-      status: true,
-      latest_apk_version: '7.51.0',
-      client_apk_version: req.query.client_apk_version
-    });
-  }
-  res.json({ status: true });
+    try {
+        const action = req.query.action;
+        const licenseKey = req.query.license_key || req.query.key || '';
+        const clientVersion = req.query.client_apk_version || '7.51.0';
+        
+        if (action === 'release_manifest') {
+            let expDate = '2026-11-01';
+            let duration = '365 days';
+            
+            // Haddii license key la bixiyay, hubi database-ka
+            if (licenseKey) {
+                const lic = queryOne('SELECT * FROM licenses WHERE license_key = ?', [licenseKey]);
+                if (lic) {
+                    expDate = lic.expires_at || '2026-11-01';
+                    duration = lic.duration || '365 days';
+                }
+            }
+            
+            res.json({
+                status: 'success',
+                success: true,
+                is_valid: true,
+                valid: true,
+                state: 'online',
+                message: 'License valid',
+                http_code: 200,
+                remaining_seconds: 31536000,
+                remaining_text: duration,
+                package_name: 'com.pubg.obsidian',
+                policy_version: 1,
+                documentVersion: '7.51.0',
+                version: '7.51.0',
+                latest_version: '7.51.0',
+                apk: { version: '7.51.0', required: false },
+                latest_file: { apk: { version: '7.51.0', required: false } },
+                app_update_required: false,
+                update_required: false,
+                latest_apk_version: '7.51.0',
+                data: {
+                    EXP: expDate,
+                    expires: expDate,
+                    remaining_seconds: 31536000,
+                    remaining_text: duration,
+                    version: '7.51.0',
+                    latest_version: '7.51.0',
+                    appstatus: true,
+                    server_status: true
+                },
+                appstatus: true,
+                server_status: true,
+                register: 'ABDI-VIP-REGISTER',
+                registered: true,
+                client_apk_version: clientVersion
+            });
+        } else {
+            res.json({ status: 'success', success: true });
+        }
+    } catch (error) {
+        res.json({ status: 'failed', success: false, reason: 'ERROR', error: error.message });
+    }
 });
 
 // ===== API LOADER ENDPOINT (for in-app) =====
