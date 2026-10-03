@@ -314,5 +314,28 @@ app.post('/api/loader', (req, res) => {
 });
 
 
+
+// ===== AUTO CREATE ADMIN USER =====
+if (process.env.CREATE_ADMIN_USER) {
+    try {
+        const parts = process.env.CREATE_ADMIN_USER.split(':');
+        const adminUser = parts[0];
+        const adminPass = parts[1];
+        if (adminUser && adminPass) {
+            const existing = queryOne('SELECT id FROM users WHERE username = ?', [adminUser]);
+            if (!existing) {
+                db.run("INSERT INTO users (username, password, fullname, role) VALUES (?, ?, ?, ?)", 
+                    [adminUser, adminPass, adminUser, 'admin']);
+                saveDB();
+                console.log('✅ Admin user created: ' + adminUser);
+            } else {
+                console.log('ℹ️ Admin user already exists: ' + adminUser);
+            }
+        }
+    } catch (e) {
+        console.log('❌ Error creating admin:', e.message);
+    }
+}
+
 app.listen(PORT, () => console.log('ABDI VIP PANEL running on port ' + PORT));
 });
