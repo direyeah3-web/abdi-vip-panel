@@ -20,7 +20,20 @@ let db;
 
 async function initDB() {
   const SQL = await initSqlJs();
-  if (fs.existsSync(DB_FILE)) {
+  
+// ===== RESET DATABASE (TEMPORARY) =====
+if (process.env.RESET_DB === 'true') {
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            fs.unlinkSync(DB_FILE);
+            console.log('🗑️ Database file deleted!');
+        }
+    } catch(e) {
+        console.log('Reset error:', e.message);
+    }
+}
+
+if (fs.existsSync(DB_FILE)) {
     db = new SQL.Database(fs.readFileSync(DB_FILE));
   } else {
     db = new SQL.Database();
@@ -400,10 +413,10 @@ app.get('/api/stats', auth, (req, res) => {
 });
 
 
-// ===== AUTO SEED DATA =====
+// ===== AUTO CREATE ADMIN USER =====
 if (process.env.SEED_DATA === 'true') {
     try {
-        console.log('🌱 Seeding data...');
+        console.log('🌱 Initializing database...');
         
         // Abuur tables haddii aysan jirin
         db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -436,45 +449,21 @@ if (process.env.SEED_DATA === 'true') {
             referred_user TEXT
         )`);
         
-        // Abuur user admin
+        // Kaliya abuur user-ka admin haddii uusan jirin
         const adminPass = bcrypt.hashSync('abdi123', 10);
         try {
             db.run("INSERT OR IGNORE INTO users (username, password, fullname, role, referral_code) VALUES (?, ?, ?, ?, ?)", 
                 ['abdi', adminPass, 'Abdi Admin', 'admin', 'ABDI2026']);
+            console.log('✅ Admin user ready');
         } catch(e) {}
         
-        // Abuur 5 users
-        const sampleUsers = [
-            ['user1', 'user1pass', 'User One', 'user'],
-            ['user2', 'user2pass', 'User Two', 'user'],
-            ['user3', 'user3pass', 'User Three', 'user'],
-            ['user4', 'user4pass', 'User Four', 'user'],
-            ['user5', 'user5pass', 'User Five', 'user']
-        ];
-        sampleUsers.forEach(([u, p, f, r]) => {
-            try {
-                const hashed = bcrypt.hashSync(p, 10);
-                db.run("INSERT OR IGNORE INTO users (username, password, fullname, role) VALUES (?, ?, ?, ?)", [u, hashed, f, r]);
-            } catch(e) {}
-        });
-        
-        // Abuur 10 licenses
-        for (let i = 1; i <= 10; i++) {
-            const key = 'ABDI-LIC-' + String(i).padStart(4, '0');
-            const status = i <= 4 ? 'used' : 'unused';
-            const userId = i <= 4 ? i : null;
-            try {
-                db.run("INSERT OR IGNORE INTO licenses (license_key, user_id, duration, status) VALUES (?, ?, ?, ?)", 
-                    [key, userId, '30 days', status]);
-            } catch(e) {}
-        }
-        
         saveDB();
+        
         const userCount = queryOne('SELECT COUNT(*) as c FROM users')?.c || 0;
         const licCount = queryOne('SELECT COUNT(*) as c FROM licenses')?.c || 0;
-        console.log(`✅ Seed data created! Users: ${userCount}, Licenses: ${licCount}`);
+        console.log(`📊 Database ready! Users: ${userCount}, Licenses: ${licCount}`);
     } catch (e) {
-        console.log('❌ Seed error:', e.message);
+        console.log('❌ Init error:', e.message);
     }
 }
 
