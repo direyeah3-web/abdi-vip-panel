@@ -119,7 +119,9 @@ function loaderAuth(req, res) {
   if (lic.status === 'used' && lic.device_id && lic.device_id !== device_id) return res.status(403).json({ isValid: false, valid: false, error: 'License locked to another device' });
   if (lic.status === 'unused') { db.run('UPDATE licenses SET status = ?, device_id = ?, used_at = CURRENT_TIMESTAMP WHERE id = ?', ['used', device_id || null, lic.id]); saveDB(); }
   const token = jwt.sign({ license: licKey, device: device_id, expires: lic.expires_at }, SECRET, { expiresIn: '30d' });
-  res.json({ isValid: true, valid: true, success: true, status: 'success', token, expires_at: lic.expires_at, duration: lic.duration, message: 'Loader authenticated' });
+  res.json({ isValid: true, valid: true, success: true, status: 'success',
+      state: 'online',
+      message: '', token, expires_at: lic.expires_at, duration: lic.duration, message: 'Loader authenticated' });
 }
 
 app.post('/api/loader/auth', loaderAuth);
@@ -287,6 +289,8 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
 
     res.json({
       status: 'success',
+      state: 'online',
+      message: '',
       appStatus: 'active',
       httpCode: 200,
       message: 'License valid',
