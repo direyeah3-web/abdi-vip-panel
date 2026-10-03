@@ -57,7 +57,43 @@ function addDuration(d) {
   else if (u.startsWith('year')) now.setFullYear(now.getFullYear() + n);
   return now.toISOString();
 }
-function auth(req, res, next) { const h = req.headers.authorization; if (!h) return res.status(401).json({ error: 'No token' }); try { req.user = jwt.verify(h.split(' ')[1], SECRET); next(); } catch (e) { res.status(401).json({ error: 'Bad token' }); } }
+function auth(req, res, next) {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        
+        // Token-ka cusub wuxuu leeyahay qaab: token_ID_TIMESTAMP
+        if (token.startsWith('token_')) {
+            const parts = token.split('_');
+            const userId = parts[1];
+            
+            // Raadi user-ka database-ka
+            const user = queryOne('SELECT * FROM users WHERE id = ?', [userId]);
+            
+            if (!user) {
+                return res.status(401).json({ error: 'User not found' });
+            }
+            
+            req.user = user;
+            return next();
+        }
+        
+        // Haddii uu yahay JWT token (kii hore)
+        try {
+            const decoded = jwt.verify(token, SECRET);
+            req.user = decoded;
+            return next();
+        } catch(e) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+    } catch (error) {
+        return res.status(401).json({ error: error.message });
+    }
+}
 function adminOnly(req, res, next) { if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' }); next(); }
 
 function loaderAuth(req, res) {
