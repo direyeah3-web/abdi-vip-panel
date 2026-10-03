@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obsidian Bypass</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+    --bg:#0a0713;--bg2:#130d21;--card:#1a1329;--card2:#221a35;
+    --text:#fff;--muted:#8b7fa8;--primary:#a78bfa;--primary2:#8b5cf6;
+    --primary-dark:#7c3aed;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+    --border:#2d2342;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{
+    background:linear-gradient(135deg,#0a0713 0%,#130d21 50%,#0a0713 100%);
+    color:var(--text);min-height:100vh;overflow-x:hidden;
+}
+body::before{
+    content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+    background:
+        radial-gradient(circle at 20% 30%,rgba(139,92,246,0.15) 0%,transparent 50%),
+        radial-gradient(circle at 80% 70%,rgba(167,139,250,0.1) 0%,transparent 50%);
+    pointer-events:none;z-index:0;
+}
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen{
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    min-height:100vh;padding:20px;position:relative;z-index:1;
+}
+.logo-top{
+    display:flex;align-items:center;gap:12px;margin-bottom:30px;
+    padding:15px 25px;background:rgba(26,19,41,0.8);border-radius:16px;
+    border:1px solid var(--border);backdrop-filter:blur(20px);
+}
+.logo-top i{font-size:32px;color:var(--primary);}
+.logo-top div div:first-child{font-size:18px;font-weight:800;}
+.logo-top div div:last-child{font-size:11px;color:var(--muted);}
+.obsidian-title{
+    font-size:42px;font-weight:800;margin-bottom:40px;text-align:center;
+    background:linear-gradient(135deg,#a78bfa,#8b5cf6,#7c3aed);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.login-box{
+    background:rgba(26,19,41,0.7);border:1px solid var(--border);
+    border-radius:24px;padding:30px;width:100%;max-width:420px;
+    backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.key-input-wrap{
+    position:relative;display:flex;align-items:center;
+    background:#0f0a1c;border:1px solid var(--border);border-radius:14px;
+    padding:4px 4px 4px 18px;margin-bottom:20px;
+}
+.key-input-wrap input{
+    flex:1;background:transparent;border:none;color:var(--text);
+    font-size:15px;padding:14px 0;outline:none;letter-spacing:1px;
+}
+.key-input-wrap .icon-btn{
+    background:transparent;border:none;color:var(--muted);
+    padding:10px;cursor:pointer;font-size:16px;
+}
+.key-input-wrap .icon-btn:hover{color:var(--primary);}
+.login-btn{
+    width:100%;padding:16px;background:linear-gradient(135deg,#a78bfa,#8b5cf6);
+    color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;
+    cursor:pointer;transition:0.3s;position:relative;
+}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(139,92,246,0.4);}
+.login-btn.success{background:linear-gradient(135deg,#10b981,#059669);}
+#login-error{
+    color:var(--red);font-size:13px;text-align:center;
+    margin-top:15px;display:none;
+}
+
+/* ===== MAIN MENU ===== */
+#main-menu{display:none;min-height:100vh;position:relative;z-index:1;}
+.topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 25px;background:rgba(26,19,41,0.7);
+    border-bottom:1px solid var(--border);backdrop-filter:blur(20px);
+    position:sticky;top:0;z-index:100;
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-left i{font-size:24px;color:var(--primary);}
+.topbar-left span{font-size:18px;font-weight:800;}
+.topbar-right{display:flex;align-items:center;gap:15px;}
+.license-badge{
+    display:flex;align-items:center;gap:8px;padding:8px 14px;
+    background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);
+    border-radius:20px;font-size:13px;color:var(--green);font-weight:600;
+}
+.license-badge.warning{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.3);color:var(--yellow);}
+.license-badge.danger{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:var(--red);}
+.license-badge i{font-size:12px;}
+
+/* Sidebar */
+.layout{display:flex;min-height:calc(100vh - 70px);}
+.sidebar{
+    width:220px;background:rgba(26,19,41,0.5);
+    border-right:1px solid var(--border);padding:20px 12px;
+    position:sticky;top:70px;height:calc(100vh - 70px);
+    overflow-y:auto;
+}
+.sidebar-item{
+    display:flex;align-items:center;gap:12px;padding:12px 16px;
+    border-radius:12px;color:var(--muted);text-decoration:none;
+    font-size:14px;font-weight:600;margin-bottom:4px;cursor:pointer;
+    transition:0.2s;
+}
+.sidebar-item:hover{background:rgba(139,92,246,0.1);color:var(--text);}
+.sidebar-item.active{
+    background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(139,92,246,0.2));
+    color:var(--primary);border-left:3px solid var(--primary);
+}
+.sidebar-item i{width:20px;text-align:center;font-size:16px;}
+
+/* Content */
+.content{flex:1;padding:25px;overflow-x:hidden;}
+.tab-content{display:none;}
+.tab-content.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.page-title{
+    font-size:24px;font-weight:800;margin-bottom:20px;
+    display:flex;align-items:center;gap:12px;
+}
+.page-title i{color:var(--primary);font-size:20px;}
+
+/* Cards */
+.card{
+    background:rgba(26,19,41,0.6);border:1px solid var(--border);
+    border-radius:18px;padding:22px;margin-bottom:20px;
+    backdrop-filter:blur(10px);
+}
+.card-title{
+    font-size:16px;font-weight:700;margin-bottom:18px;
+    display:flex;align-items:center;gap:10px;color:var(--primary);
+}
+.card-title i{font-size:14px;}
+
+/* Grid */
+.grid{display:grid;gap:15px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+/* Toggle Switch */
+.toggle-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid rgba(45,35,66,0.5);
+}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:14px;font-weight:500;}
+.toggle-label small{display:block;font-size:11px;color:var(--muted);margin-top:2px;}
+.switch{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{
+    position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;
+    background:#2d2342;transition:0.3s;border-radius:26px;
+}
+.slider:before{
+    position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;
+    background:#8b7fa8;transition:0.3s;border-radius:50%;
+}
+input:checked + .slider{background:linear-gradient(135deg,#a78bfa,#8b5cf6);}
+input:checked + .slider:before{transform:translateX(22px);background:#fff;}
+
+/* Slider Range */
+.range-row{padding:12px 0;}
+.range-header{display:flex;justify-content:space-between;margin-bottom:8px;}
+.range-header span:first-child{font-size:13px;color:var(--muted);font-weight:500;}
+.range-header span:last-child{font-size:13px;color:var(--primary);font-weight:700;}
+input[type="range"]{
+    width:100%;height:6px;border-radius:3px;background:#2d2342;
+    outline:none;-webkit-appearance:none;cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:#fff;border:3px solid #8b5cf6;cursor:pointer;
+    box-shadow:0 0 10px rgba(139,92,246,0.5);
+}
+
+/* Color Picker */
+.color-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;
+}
+.color-row span{font-size:13px;color:var(--muted);}
+.color-box{
+    width:40px;height:28px;border-radius:8px;border:2px solid var(--border);
+    cursor:pointer;transition:0.2s;
+}
+.color-box:hover{transform:scale(1.1);}
+
+/* Select */
+select{
+    width:100%;padding:12px;background:#0f0a1c;border:1px solid var(--border);
+    border-radius:10px;color:var(--text);font-size:14px;outline:none;cursor:pointer;
+}
+select:focus{border-color:var(--primary);}
+
+/* Buttons */
+.btn{
+    padding:12px 20px;border:none;border-radius:10px;font-size:14px;
+    font-weight:600;cursor:pointer;transition:0.2s;
+    display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#fff;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(139,92,246,0.3);}
+.btn-secondary{background:#2d2342;color:var(--text);}
+.btn-secondary:hover{background:#3d3155;}
+
+/* Weapon Grid */
+.weapon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.weapon-item{
+    display:flex;align-items:center;gap:8px;padding:8px 10px;
+    background:#0f0a1c;border:1px solid var(--border);border-radius:8px;
+    font-size:12px;cursor:pointer;transition:0.2s;
+}
+.weapon-item:hover{border-color:var(--primary);}
+.weapon-item input{width:14px;height:14px;accent-color:var(--primary);}
+
+/* Notification Toast */
+.toast{
+    position:fixed;top:20px;right:20px;padding:15px 20px;
+    background:rgba(16,185,129,0.95);color:#fff;border-radius:12px;
+    font-size:14px;font-weight:600;z-index:9999;
+    transform:translateX(200%);transition:0.3s;
+    display:flex;align-items:center;gap:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+.toast.show{transform:translateX(0);}
+
+/* Mobile */
+@media(max-width:768px){
+    .sidebar{
+        position:fixed;left:-240px;top:70px;z-index:200;
+        transition:left 0.3s;width:220px;background:#1a1329;
+    }
+    .sidebar.open{left:0;}
+    .menu-toggle{display:flex !important;}
+    .obsidian-title{font-size:32px;}
+    .content{padding:15px;}
+    .topbar{padding:12px 15px;}
+    .topbar-left span{font-size:15px;}
+    .license-badge{padding:6px 10px;font-size:11px;}
+}
+.menu-toggle{display:none;background:transparent;border:none;color:var(--text);font-size:20px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+    <div class="logo-top">
+        <i class="fa-solid fa-gem"></i>
+        <div>
+            <div>OP Gaming Core</div>
+            <div>OP Gaming Tri-Chip • 165Hz • OP FPS Max</div>
+        </div>
+    </div>
+    <h1 class="obsidian-title">Obsidian Bypass</h1>
+    <div class="login-box">
+        <div class="key-input-wrap">
+            <input type="password" id="license-key" placeholder="Enter License Key">
+            <button class="icon-btn" onclick="toggleKeyVisibility()"><i class="fa-regular fa-eye" id="eye-icon"></i></button>
+            <button class="icon-btn" onclick="pasteKey()"><i class="fa-regular fa-clipboard"></i></button>
+        </div>
+        <button class="login-btn" id="login-btn" onclick="handleLogin()">
+            <i class="fa-solid fa-play"></i> Login
+        </button>
+        <div id="login-error"></div>
+    </div>
+</div>
+
+<!-- ===== MAIN MENU ===== -->
+<div id="main-menu">
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <i class="fa-solid fa-gem"></i>
+            <span>Obsidian Bypass</span>
+        </div>
+        <div class="topbar-right">
+            <div class="license-badge" id="license-badge">
+                <i class="fa-solid fa-clock"></i>
+                <span id="license-time">Loading...</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <a class="sidebar-item active" onclick="switchTab('visual', this)"><i class="fa-solid fa-eye"></i> Visual</a>
+            <a class="sidebar-item" onclick="switchTab('aim', this)"><i class="fa-solid fa-crosshairs"></i> Aim</a>
+            <a class="sidebar-item" onclick="switchTab('misc', this)"><i class="fa-solid fa-cube"></i> Misc</a>
+            <a class="sidebar-item" onclick="switchTab('style', this)"><i class="fa-solid fa-pen"></i> Style</a>
+            <a class="sidebar-item" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Settings</a>
+        </aside>
+        
+        <main class="content">
+            <!-- VISUAL TAB -->
+            <div class="tab-content active" id="tab-visual">
+                <div class="page-title"><i class="fa-solid fa-eye"></i> Visual</div>
+                
+                <div class="grid grid-3">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-user"></i> Player</div>
+                        <div class="toggle-row"><div class="toggle-label">Line</div><label class="switch"><input type="checkbox" data-key="vis-line" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Skeleton</div><label class="switch"><input type="checkbox" data-key="vis-skeleton" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Health</div><label class="switch"><input type="checkbox" data-key="vis-health" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Distance</div><label class="switch"><input type="checkbox" data-key="vis-distance" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Target Line</div><label class="switch"><input type="checkbox" data-key="vis-target" checked><span class="slider"></span></label></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-tag"></i> Labels</div>
+                        <div class="toggle-row"><div class="toggle-label">Name</div><label class="switch"><input type="checkbox" data-key="vis-name" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Enemy Count</div><label class="switch"><input type="checkbox" data-key="vis-count" checked><span class="slider"></span></label></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-globe"></i> World</div>
+                        <div class="toggle-row"><div class="toggle-label">Vehicles</div><label class="switch"><input type="checkbox" data-key="vis-vehicles" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Tomb Box</div><label class="switch"><input type="checkbox" data-key="vis-tomb" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Throwable Warning</div><label class="switch"><input type="checkbox" data-key="vis-throw" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Item ESP</div><label class="switch"><input type="checkbox" data-key="vis-item"><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">360 Alert</div><label class="switch"><input type="checkbox" data-key="vis-360"><span class="slider"></span></label></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-palette"></i> Colors & Text</div>
+                        <div class="color-row"><span>Visible</span><div class="color-box" style="background:#22c55e;" onclick="pickColor(this, 'vis-color-visible')"></div></div>
+                        <div class="color-row"><span>Non-Visible</span><div class="color-box" style="background:#ef4444;" onclick="pickColor(this, 'vis-color-nonvisible')"></div></div>
+                        <div class="color-row"><span>Distance</span><div class="color-box" style="background:#f59e0b;" onclick="pickColor(this, 'vis-color-distance')"></div></div>
+                        <div class="color-row"><span>Target Line</span><div class="color-box" style="background:#3b82f6;" onclick="pickColor(this, 'vis-color-target')"></div></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-text-height"></i> Text Settings</div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Text Size</span><span id="text-size-val">25 px</span></div>
+                            <input type="range" min="10" max="50" value="25" data-key="vis-text-size" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Vertical Gap</span><span id="v-gap-val">8 px</span></div>
+                            <input type="range" min="1" max="30" value="8" data-key="vis-v-gap" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-ruler"></i> Lines</div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Line Thickness</span><span id="line-thick-val">2 px</span></div>
+                            <input type="range" min="1" max="10" value="2" data-key="vis-line-thick" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Bone Thickness</span><span id="bone-thick-val">2 px</span></div>
+                            <input type="range" min="1" max="10" value="2" data-key="vis-bone-thick" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Target Line</span><span id="target-thick-val">3 px</span></div>
+                            <input type="range" min="1" max="10" value="3" data-key="vis-target-thick" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-arrows-left-right"></i> Range</div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Draw Distance</span><span id="draw-dist-val">500 m</span></div>
+                            <input type="range" min="50" max="1000" value="500" data-key="vis-draw-dist" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Item Distance</span><span id="item-dist-val">100 m</span></div>
+                            <input type="range" min="10" max="500" value="100" data-key="vis-item-dist" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-gun"></i> Weapons</div>
+                    <div class="weapon-grid">
+                        <label class="weapon-item"><input type="checkbox" data-key="w-akm"> AKM</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-m16a4"> M16A4</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-scarl"> SCAR-L</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-m416"> M416</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-groza"> Groza</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-auga3"> AUG A3</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-qbz"> QBZ</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-m762"> M762</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-mk47"> Mk47</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-g36c"> G36C</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-famas"> FAMAS</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-m249"> M249</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-dp28"> DP-28</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-uzi"> UZI</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-ump45"> UMP45</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-vector"> Vector</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-tompson"> Tompson</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-pp19"> PP-19</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-skorpion"> Skorpion</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-kar98k"> Kar98K</label>
+                        <label class="weapon-item"><input type="checkbox" data-key="w-m24"> M24</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AIM TAB -->
+            <div class="tab-content" id="tab-aim">
+                <div class="page-title"><i class="fa-solid fa-crosshairs"></i> Aim</div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-bullseye"></i> Targeting</div>
+                        <div class="toggle-row"><div class="toggle-label">Aimbot</div><label class="switch"><input type="checkbox" data-key="aim-aimbot" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Ignore Bot</div><label class="switch"><input type="checkbox" data-key="aim-ignore-bot"><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Ignore Knocked</div><label class="switch"><input type="checkbox" data-key="aim-ignore-knocked" checked><span class="slider"></span></label></div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Distance</span><span id="aim-dist-val">150 m</span></div>
+                            <input type="range" min="10" max="500" value="150" data-key="aim-distance" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Smoothness</div>
+                        <div class="toggle-row"><div class="toggle-label">Advanced</div><label class="switch"><input type="checkbox" data-key="aim-advanced" checked><span class="slider"></span></label></div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Smoothness</span><span id="aim-smooth-val">100</span></div>
+                            <input type="range" min="1" max="200" value="100" data-key="aim-smooth" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Axis X</span><span id="aim-axisx-val">100</span></div>
+                            <input type="range" min="1" max="200" value="100" data-key="aim-axisx" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Axis Y</span><span id="aim-axisy-val">100</span></div>
+                            <input type="range" min="1" max="200" value="100" data-key="aim-axisy" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-gears"></i> Behavior</div>
+                        <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:8px;">Select By</label>
+                        <select data-key="aim-select-by" style="margin-bottom:15px;">
+                            <option value="crosshair">Crosshair</option>
+                            <option value="fov">FOV</option>
+                            <option value="distance">Distance</option>
+                        </select>
+                        <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:8px;">Target Bone</label>
+                        <select data-key="aim-target-bone">
+                            <option value="head">Head</option>
+                            <option value="neck">Neck</option>
+                            <option value="chest">Chest</option>
+                        </select>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-circle-notch"></i> FOV</div>
+                        <div class="toggle-row"><div class="toggle-label">Show FOV</div><label class="switch"><input type="checkbox" data-key="aim-show-fov" checked><span class="slider"></span></label></div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Radius</span><span id="aim-fov-r-val">300 px</span></div>
+                            <input type="range" min="50" max="600" value="300" data-key="aim-fov-radius" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Thickness</span><span id="aim-fov-t-val">3 px</span></div>
+                            <input type="range" min="1" max="10" value="3" data-key="aim-fov-thick" oninput="updateRange(this)">
+                        </div>
+                        <div class="color-row"><span>FOV Color</span><div class="color-box" style="background:#fff;" onclick="pickColor(this, 'aim-fov-color')"></div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MISC TAB -->
+            <div class="tab-content" id="tab-misc">
+                <div class="page-title"><i class="fa-solid fa-cube"></i> Misc</div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-display"></i> Display</div>
+                        <div class="toggle-row"><div class="toggle-label">iPad View</div><label class="switch"><input type="checkbox" data-key="misc-ipad" checked><span class="slider"></span></label></div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Field of View</span><span id="misc-fov-val">360</span></div>
+                            <input type="range" min="60" max="360" value="360" data-key="misc-fov" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-microchip"></i> System</div>
+                        <div class="toggle-row"><div class="toggle-label">Force Max FPS</div><label class="switch"><input type="checkbox" data-key="misc-maxfps"><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Hide Screen Recording <i class="fa-solid fa-circle-question" style="color:var(--muted);font-size:11px;"></i></div><label class="switch"><input type="checkbox" data-key="misc-hide-rec"><span class="slider"></span></label></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- STYLE TAB -->
+            <div class="tab-content" id="tab-style">
+                <div class="page-title"><i class="fa-solid fa-pen"></i> Style</div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-palette"></i> Appearance</div>
+                        <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:8px;">Theme</label>
+                        <select data-key="style-theme" style="margin-bottom:15px;">
+                            <option value="obsidian">Obsidian</option>
+                            <option value="nebula">Nebula</option>
+                        </select>
+                        <div class="range-row">
+                            <div class="range-header"><span>Menu Scale</span><span id="style-scale-val">100%</span></div>
+                            <input type="range" min="50" max="150" value="100" data-key="style-scale" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Menu Opacity</span><span id="style-opacity-val">100%</span></div>
+                            <input type="range" min="50" max="100" value="100" data-key="style-opacity" oninput="updateRange(this)">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-volume-high"></i> Sound</div>
+                        <div class="toggle-row"><div class="toggle-label">Sound Effects</div><label class="switch"><input type="checkbox" data-key="style-sound" checked><span class="slider"></span></label></div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Sound Volume</span><span id="style-vol-val">80%</span></div>
+                            <input type="range" min="0" max="100" value="80" data-key="style-volume" oninput="updateRange(this)">
+                        </div>
+                        <div class="toggle-row"><div class="toggle-label">Haptic Feedback</div><label class="switch"><input type="checkbox" data-key="style-haptic"><span class="slider"></span></label></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-window-maximize"></i> Interface</div>
+                        <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:8px;">Toast Position</label>
+                        <select data-key="style-toast" style="margin-bottom:15px;">
+                            <option value="topc">Top C</option>
+                            <option value="topr">Top R</option>
+                            <option value="botr">Bot R</option>
+                        </select>
+                        <div class="range-row">
+                            <div class="range-header"><span>Anim Speed</span><span id="style-anim-val">100%</span></div>
+                            <input type="range" min="50" max="200" value="100" data-key="style-anim" oninput="updateRange(this)">
+                        </div>
+                        <button class="btn btn-secondary" style="width:100%;margin-top:15px;" onclick="resetPrefs()"><i class="fa-solid fa-rotate"></i> Reset Preferences</button>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-star"></i> Ambience</div>
+                        <div class="toggle-row"><div class="toggle-label">Twinkling Stars</div><label class="switch"><input type="checkbox" data-key="amb-stars" checked><span class="slider"></span></label></div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Star Count</span><span id="amb-starc-val">120</span></div>
+                            <input type="range" min="0" max="300" value="120" data-key="amb-star-count" oninput="updateRange(this)">
+                        </div>
+                        <div class="range-row">
+                            <div class="range-header"><span>Star Brightness</span><span id="amb-starb-val">100%</span></div>
+                            <input type="range" min="10" max="100" value="100" data-key="amb-star-bright" oninput="updateRange(this)">
+                        </div>
+                        <div class="toggle-row"><div class="toggle-label">Meteor Rain</div><label class="switch"><input type="checkbox" data-key="amb-meteor" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Corner Blooms</div><label class="switch"><input type="checkbox" data-key="amb-corner" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Edge Orbiters</div><label class="switch"><input type="checkbox" data-key="amb-edge" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><div class="toggle-label">Touch Trail</div><label class="switch"><input type="checkbox" data-key="amb-touch" checked><span class="slider"></span></label></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SETTINGS TAB -->
+            <div class="tab-content" id="tab-settings">
+                <div class="page-title"><i class="fa-solid fa-gear"></i> Settings</div>
+                
+                <div class="grid grid-3">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-floppy-disk"></i> Presets</div>
+                        <button class="btn btn-primary" style="width:100%;margin-bottom:10px;" onclick="savePreset()"><i class="fa-solid fa-save"></i> Save Preset</button>
+                        <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="loadPreset()"><i class="fa-solid fa-folder-open"></i> Load Preset</button>
+                        <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="resetDefault()"><i class="fa-solid fa-rotate-left"></i> Reset to Default</button>
+                        <button class="btn btn-secondary" style="width:100%;" onclick="resetGuest()"><i class="fa-solid fa-user"></i> Reset Guest</button>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-key"></i> License</div>
+                        <div class="toggle-row"><div class="toggle-label">Expiry</div><div id="settings-expiry" style="font-size:14px;font-weight:600;color:var(--primary);">Loading...</div></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-circle-info"></i> About</div>
+                        <div class="toggle-row"><div class="toggle-label">Version</div><div style="font-size:14px;font-weight:600;">1.0</div></div>
+                        <div class="toggle-row"><div class="toggle-label">Game</div><div style="font-size:14px;font-weight:600;">4.6.0</div></div>
+                        <div class="toggle-row"><div class="toggle-label">Region</div><div style="font-size:14px;font-weight:600;">GL</div></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="toast" id="toast"><i class="fa-solid fa-check-circle"></i><span id="toast-text">Success</span></div>
+
+<script>
+// ===== CONFIG =====
+var SERVER_URL = 'https://abdi-vip-panel-production.up.railway.app';
+var API_LOADER = SERVER_URL + '/api/loader';
+
+// ===== LICENSE KEY VISIBILITY =====
+function toggleKeyVisibility() {
+    var input = document.getElementById('license-key');
+    var icon = document.getElementById('eye-icon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+async function pasteKey() {
+    try {
+        var text = await navigator.clipboard.readText();
+        document.getElementById('license-key').value = text;
+    } catch(e) {
+        alert('Paste manually');
+    }
+}
+
+// ===== LOGIN =====
+async function handleLogin() {
+    var key = document.getElementById('license-key').value.trim();
+    var btn = document.getElementById('login-btn');
+    var err = document.getElementById('login-error');
+    
+    if (!key) {
+        err.textContent = 'Fadlan geli license key-ga';
+        err.style.display = 'block';
+        return;
+    }
+    
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+    btn.disabled = true;
+    err.style.display = 'none';
+    
+    try {
+        var res = await fetch(API_LOADER, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ license_key: key })
+        });
+        var data = await res.json();
+        
+        if (data.status === true || data.valid === true || data.success === true) {
+            localStorage.setItem('obsidian_key', key);
+            localStorage.setItem('obsidian_data', JSON.stringify(data.data || data));
+            btn.classList.add('success');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Login Success';
+            showToast('Welcome to Obsidian Bypass');
+            setTimeout(function() { showMainMenu(data.data || data); }, 800);
+        } else {
+            err.textContent = 'License key-ga waa khaldan yahay!';
+            err.style.display = 'block';
+            btn.innerHTML = '<i class="fa-solid fa-play"></i> Login';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        err.textContent = 'Server error: ' + e.message;
+        err.style.display = 'block';
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> Login';
+        btn.disabled = false;
+    }
+}
+
+// ===== MAIN MENU =====
+function showMainMenu(data) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-menu').style.display = 'block';
+    
+    // Update license badge
+    var remaining = data.remaining_text || data.EXP || 'Active';
+    var badge = document.getElementById('license-badge');
+    document.getElementById('license-time').textContent = remaining;
+    document.getElementById('settings-expiry').textContent = remaining;
+    
+    // Load all settings
+    loadAllSettings();
+}
+
+// ===== SIDEBAR TOGGLE (Mobile) =====
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(tab, el) {
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (el) {
+        document.querySelectorAll('.sidebar-item').forEach(function(i) { i.classList.remove('active'); });
+        el.classList.add('active');
+    }
+    document.getElementById('sidebar').classList.remove('open');
+}
+
+// ===== UPDATE RANGE =====
+function updateRange(input) {
+    var val = input.value;
+    var key = input.getAttribute('data-key');
+    var valEl = input.parentElement.querySelector('.range-header span:last-child');
+    
+    // Update display value
+    if (valEl) {
+        var suffix = '';
+        if (key.includes('px') || key.includes('size') || key.includes('thick') || key.includes('radius') || key.includes('gap')) suffix = ' px';
+        else if (key.includes('dist') || key.includes('range')) suffix = ' m';
+        else if (key.includes('bright') || key.includes('opacity') || key.includes('volume') || key.includes('scale') || key.includes('anim')) suffix = '%';
+        valEl.textContent = val + suffix;
+    }
+    
+    // Save
+    localStorage.setItem('obsidian_' + key, val);
+}
+
+// ===== COLOR PICKER =====
+function pickColor(el, key) {
+    var colors = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#a78bfa', '#ec4899', '#ffffff', '#000000'];
+    var current = el.style.background;
+    var idx = colors.indexOf(current);
+    var next = colors[(idx + 1) % colors.length];
+    el.style.background = next;
+    localStorage.setItem('obsidian_' + key, next);
+}
+
+// ===== LOAD ALL SETTINGS =====
+function loadAllSettings() {
+    // Toggles
+    document.querySelectorAll('input[type="checkbox"][data-key]').forEach(function(cb) {
+        var key = cb.getAttribute('data-key');
+        var saved = localStorage.getItem('obsidian_' + key);
+        if (saved !== null) cb.checked = saved === 'true';
+    });
+    
+    // Ranges
+    document.querySelectorAll('input[type="range"][data-key]').forEach(function(r) {
+        var key = r.getAttribute('data-key');
+        var saved = localStorage.getItem('obsidian_' + key);
+        if (saved !== null) {
+            r.value = saved;
+            updateRange(r);
+        }
+    });
+    
+    // Selects
+    document.querySelectorAll('select[data-key]').forEach(function(s) {
+        var key = s.getAttribute('data-key');
+        var saved = localStorage.getItem('obsidian_' + key);
+        if (saved !== null) s.value = saved;
+    });
+}
+
+// ===== SAVE ON CHANGE =====
+document.addEventListener('change', function(e) {
+    if (e.target.matches('input[type="checkbox"][data-key]')) {
+        var key = e.target.getAttribute('data-key');
+        localStorage.setItem('obsidian_' + key, e.target.checked);
+    }
+    if (e.target.matches('select[data-key]')) {
+        var key = e.target.getAttribute('data-key');
+        localStorage.setItem('obsidian_' + key, e.target.value);
+    }
+});
+
+// ===== PRESETS =====
+function savePreset() {
+    var data = {};
+    document.querySelectorAll('[data-key]').forEach(function(el) {
+        var key = el.getAttribute('data-key');
+        if (el.type === 'checkbox') data[key] = el.checked;
+        else data[key] = el.value;
+    });
+    localStorage.setItem('obsidian_preset', JSON.stringify(data));
+    showToast('Preset saved!');
+}
+
+function loadPreset() {
+    var saved = localStorage.getItem('obsidian_preset');
+    if (!saved) { showToast('No preset found'); return; }
+    var data = JSON.parse(saved);
+    Object.keys(data).forEach(function(key) {
+        var el = document.querySelector('[data-key="' + key + '"]');
+        if (!el) return;
+        if (el.type === 'checkbox') el.checked = data[key];
+        else el.value = data[key];
+    });
+    showToast('Preset loaded!');
+}
+
+function resetDefault() {
+    localStorage.clear();
+    showToast('Reset to default');
+    setTimeout(function() { location.reload(); }, 800);
+}
+
+function resetGuest() {
+    localStorage.removeItem('obsidian_key');
+    localStorage.removeItem('obsidian_data');
+    showToast('Guest reset');
+    setTimeout(function() { location.reload(); }, 800);
+}
+
+function resetPrefs() {
+    localStorage.clear();
+    showToast('Preferences reset');
+    setTimeout(function() { location.reload(); }, 800);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+    var t = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+// ===== AUTO LOGIN =====
+window.addEventListener('load', function() {
+    var savedKey = localStorage.getItem('obsidian_key');
+    if (savedKey) {
+        document.getElementById('license-key').value = savedKey;
+        handleLogin();
+    }
+});
+</script>
+</body>
+</html>
