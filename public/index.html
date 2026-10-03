@@ -223,20 +223,111 @@
         loadPage('dashboard');
     }
     async function loadPage(pageName, element = null) {
-        if (element) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); element.classList.add('active'); }
+        if (element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
+        
         const contentArea = document.getElementById('page-content');
+        
         if (pageName === 'dashboard') {
             contentArea.innerHTML = `
                 <h1 style="margin-bottom: 20px;">Dashboard Overview</h1>
-                <div class="stats-grid" id="stats-grid"><div class="stat-card"><span class="title">Loading...</span></div></div>
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card"><span class="title">Loading...</span></div>
+                </div>
                 <div class="charts-grid">
-                    <div class="chart-box"><h3>Analytics Overview</h3><canvas id="analyticsChart"></canvas></div>
-                    <div class="chart-box"><h3>License Status</h3><canvas id="licenseChart"></canvas></div>
-                </div>`;
+                    <div class="chart-box">
+                        <h3>Analytics Overview</h3>
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>License Status</h3>
+                        <canvas id="licenseChart"></canvas>
+                    </div>
+                </div>
+            `;
             await fetchStats();
-        } else if (pageName === 'users') { contentArea.innerHTML = `<h1>Users Management</h1><p>Liiska isticmaalayaasha halkan ayaa soo baxaya.</p>`; }
-        else { contentArea.innerHTML = `<h1>${pageName.charAt(0).toUpperCase() + pageName.slice(1)}</h1><p>Qaybtaan wali lama dhisin.</p>`; }
+        } 
+        else if (pageName === 'users') {
+            contentArea.innerHTML = `
+                <h1 style="margin-bottom: 20px;">Users Management</h1>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div class="search-bar" style="flex: 1; max-width: 400px;">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="user-search" placeholder="Search users..." onkeyup="filterUsers()">
+                    </div>
+                    <button class="submit-btn" style="max-width: 200px;" onclick="showAddUserModal()">
+                        <i class="fa-solid fa-plus"></i> Add User
+                    </button>
+                </div>
+                <div class="chart-box" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #2a2a35;">
+                                <th style="padding: 12px; text-align: left;">ID</th>
+                                <th style="padding: 12px; text-align: left;">Username</th>
+                                <th style="padding: 12px; text-align: left;">Full Name</th>
+                                <th style="padding: 12px; text-align: left;">Role</th>
+                                <th style="padding: 12px; text-align: left;">License</th>
+                                <th style="padding: 12px; text-align: left;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <tr><td colspan="6" style="padding: 20px; text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            await loadUsers();
+        }
+        else if (pageName === 'licenses') {
+            contentArea.innerHTML = `
+                <h1 style="margin-bottom: 20px;">Licenses Management</h1>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="submit-btn" style="max-width: 250px;" onclick="showGenerateLicenseModal()">
+                        <i class="fa-solid fa-plus"></i> Generate License
+                    </button>
+                </div>
+                <div class="chart-box" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #2a2a35;">
+                                <th style="padding: 12px; text-align: left;">License Key</th>
+                                <th style="padding: 12px; text-align: left;">User ID</th>
+                                <th style="padding: 12px; text-align: left;">Duration</th>
+                                <th style="padding: 12px; text-align: left;">Status</th>
+                                <th style="padding: 12px; text-align: left;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licenses-tbody">
+                            <tr><td colspan="5" style="padding: 20px; text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            await loadLicenses();
+        }
+        else if (pageName === 'referrals') {
+            contentArea.innerHTML = `
+                <h1 style="margin-bottom: 20px;">Referrals</h1>
+                <div class="chart-box">
+                    <p style="color: #8b8b9e;">Referral system wali lama dhisin.</p>
+                </div>
+            `;
+        }
+        else if (pageName === 'settings') {
+            contentArea.innerHTML = `
+                <h1 style="margin-bottom: 20px;">Settings</h1>
+                <div class="chart-box">
+                    <h3>Profile</h3>
+                    <p style="color: #8b8b9e; margin-top: 10px;">Username: <strong>${JSON.parse(localStorage.getItem('user') || '{}').username || 'N/A'}</strong></p>
+                    <p style="color: #8b8b9e;">Role: <strong>${JSON.parse(localStorage.getItem('user') || '{}').role || 'N/A'}</strong></p>
+                </div>
+            `;
+        }
     }
+    
     async function fetchStats() {
         try {
             const token = localStorage.getItem('token');
@@ -293,6 +384,134 @@
         const ctx2 = document.getElementById('licenseChart').getContext('2d');
         new Chart(ctx2, { type: 'doughnut', data: { labels: ['Active', 'Expired', 'Used'], datasets: [{ data: [data.activeLicenses || 10, data.expiredLicenses || 5, data.usedLicenses || 3], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#8b8b9e' } } }, cutout: '70%' } });
     }
+    
+    // ===== LOAD USERS (REAL DATA) =====
+    async function loadUsers() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/admin/users', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const users = await response.json();
+            const tbody = document.getElementById('users-tbody');
+            if (!tbody) return;
+            if (!Array.isArray(users) || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">Ma jiro user</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(function(u) {
+                return '<tr style="border-bottom: 1px solid #2a2a35;">' +
+                    '<td style="padding: 12px;">' + u.id + '</td>' +
+                    '<td style="padding: 12px;"><strong>' + u.username + '</strong></td>' +
+                    '<td style="padding: 12px;">' + (u.fullname || '-') + '</td>' +
+                    '<td style="padding: 12px;"><span style="padding: 4px 10px; border-radius: 20px; background: ' + (u.role === 'admin' ? '#8b5cf6' : '#2a2a35') + '; font-size: 12px;">' + u.role + '</span></td>' +
+                    '<td style="padding: 12px;">' + (u.license_key || '-') + '</td>' +
+                    '<td style="padding: 12px;"><button onclick="deleteUser(' + u.id + ')" style="background: #ef4444; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;"><i class="fa-solid fa-trash"></i></button></td>' +
+                    '</tr>';
+            }).join('');
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+    
+    function filterUsers() {
+        const input = document.getElementById('user-search');
+        if (!input) return;
+        const val = input.value.toLowerCase();
+        const rows = document.querySelectorAll('#users-tbody tr');
+        rows.forEach(function(row) {
+            row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    }
+    
+    async function deleteUser(id) {
+        if (!confirm('Ma hubtaa inaad tirtirto user-kan?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/admin/users/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) loadUsers();
+            else alert('Error deleting user');
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+    
+    // ===== LOAD LICENSES (REAL DATA) =====
+    async function loadLicenses() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/licenses', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const licenses = await response.json();
+            const tbody = document.getElementById('licenses-tbody');
+            if (!tbody) return;
+            if (!Array.isArray(licenses) || licenses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Ma jiro license</td></tr>';
+                return;
+            }
+            tbody.innerHTML = licenses.map(function(l) {
+                return '<tr style="border-bottom: 1px solid #2a2a35;">' +
+                    '<td style="padding: 12px;"><code style="background: #1e1e28; padding: 4px 8px; border-radius: 4px;">' + l.license_key + '</code></td>' +
+                    '<td style="padding: 12px;">' + (l.user_id || '-') + '</td>' +
+                    '<td style="padding: 12px;">' + (l.duration || '-') + '</td>' +
+                    '<td style="padding: 12px;"><span style="padding: 4px 10px; border-radius: 20px; background: ' + (l.status === 'unused' ? '#10b981' : '#f59e0b') + '; font-size: 12px;">' + l.status + '</span></td>' +
+                    '<td style="padding: 12px;"><button onclick="deleteLicense(' + l.id + ')" style="background: #ef4444; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;"><i class="fa-solid fa-trash"></i></button></td>' +
+                    '</tr>';
+            }).join('');
+        } catch (error) {
+            console.error('Error loading licenses:', error);
+        }
+    }
+    
+    async function deleteLicense(id) {
+        if (!confirm('Ma hubtaa inaad tirtirto license-kan?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/admin/licenses/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) loadLicenses();
+            else alert('Error deleting license');
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+    
+    function showGenerateLicenseModal() {
+        const duration = prompt('Geli duration-ka license-ka:', '30 days');
+        if (!duration) return;
+        fetch('/api/licenses/generate', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify({ duration: duration })
+        }).then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert('License cusub waa la abuuray: ' + data.license_key);
+                loadLicenses();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown'));
+            }
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+    
+    function showAddUserModal() {
+        alert('Add User feature wali lama dhisin.');
+    }
+    
+    function toggleProfileMenu() {
+        const menu = document.getElementById('profile-menu');
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+    
     function handleLogout() { localStorage.removeItem('token'); location.reload(); }
     if (localStorage.getItem('token')) { showDashboard(); }
 </script>
