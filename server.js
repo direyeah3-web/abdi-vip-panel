@@ -386,6 +386,10 @@ function parseLoaderBody(rawBody) {
 }
 
 app.post('/connect', (req, res) => {
+    console.log('=== /connect REQUEST ===');
+    console.log('Body:', JSON.stringify(req.body));
+    console.log('Headers:', JSON.stringify(req.headers));
+    console.log('Query:', JSON.stringify(req.query));
     try {
         const body = parseLoaderBody(req.body);
         const licKey = body.user_key || body.key || body.license_key || '';
