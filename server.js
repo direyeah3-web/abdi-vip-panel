@@ -302,14 +302,14 @@ app.post('/ObsidianAuth/api.php', (req, res) => {
       remaining_text: '365 days',
       package_name: 'com.pubg.obsidian',
       policy_version: 1,
-      documentVersion: '7.51.0',
-      version: '7.51.0',
-      latest_version: '7.51.0',
-      apk: { version: '7.51.0', required: false },
-      latest_file: { apk: { version: '7.51.0', required: false } },
+      documentVersion: '4.6.0',
+      version: '4.6.0',
+      latest_version: '4.6.0',
+      apk: { version: '4.6.0', required: false },
+      latest_file: { apk: { version: '4.6.0', required: false } },
       app_update_required: false,
       update_required: false,
-      latest_apk_version: '7.51.0'
+      latest_apk_version: '4.6.0'
     });
   } catch (e) {
     console.log('[OBSIDIAN ERROR]', e.message);
@@ -321,7 +321,7 @@ app.get('/ObsidianAuth/api.php', (req, res) => {
     try {
         const action = req.query.action;
         const licenseKey = req.query.license_key || req.query.key || '';
-        const clientVersion = req.query.client_apk_version || '7.51.0';
+        const clientVersion = req.query.client_apk_version || '4.6.0';
         
         if (action === 'release_manifest') {
             let expDate = '2026-11-01';
@@ -348,21 +348,21 @@ app.get('/ObsidianAuth/api.php', (req, res) => {
                 remaining_text: duration,
                 package_name: 'com.pubg.obsidian',
                 policy_version: 1,
-                documentVersion: '7.51.0',
-                version: '7.51.0',
-                latest_version: '7.51.0',
-                apk: { version: '7.51.0', required: false },
-                latest_file: { apk: { version: '7.51.0', required: false } },
+                documentVersion: '4.6.0',
+                version: '4.6.0',
+                latest_version: '4.6.0',
+                apk: { version: '4.6.0', required: false },
+                latest_file: { apk: { version: '4.6.0', required: false } },
                 app_update_required: false,
                 update_required: false,
-                latest_apk_version: '7.51.0',
+                latest_apk_version: '4.6.0',
                 data: {
                     EXP: expDate,
                     expires: expDate,
                     remaining_seconds: 31536000,
                     remaining_text: duration,
-                    version: '7.51.0',
-                    latest_version: '7.51.0',
+                    version: '4.6.0',
+                    latest_version: '4.6.0',
                     appstatus: true,
                     server_status: true
                 },
@@ -398,13 +398,13 @@ app.post('/api/loader', (req, res) => {
         expires: expDate,
         remaining_seconds: 31536000,
         remaining_text: '365 days',
-        version: '7.51.0',
-        latest_version: '7.51.0',
+        version: '4.6.0',
+        latest_version: '4.6.0',
         appstatus: true,
         server_status: true
       },
-      apk: { version: '7.51.0', required: false },
-      latest_file: { apk: { version: '7.51.0', required: false } },
+      apk: { version: '4.6.0', required: false },
+      latest_file: { apk: { version: '4.6.0', required: false } },
       app_update_required: false,
       update_required: false,
       appstatus: true,
@@ -415,7 +415,7 @@ app.post('/api/loader', (req, res) => {
       register: 'ABDI-VIP-REGISTER',
       registered: true,
       message: 'License valid',
-      latest_apk_version: '7.51.0'
+      latest_apk_version: '4.6.0'
     });
   } catch (e) {
     res.json({ status: false, data: { EXP: '' }, reason: 'FAILED' });
@@ -739,7 +739,7 @@ app.post('/api/zoon', (req, res) => {
         }
         
         const expDate = lic.expires_at || '2026-11-01';
-        const appVersion = '4.5';
+        const appVersion = '4.6.0';
         
         // Liiska games-ka
         const gameList = [
@@ -852,7 +852,7 @@ app.get('/api/zoon', (req, res) => {
     }
     
     const expDate = lic.expires_at || '2026-11-01';
-    const appVersion = '4.5';
+    const appVersion = '4.6.0';
     
     const gameList = [
         {
