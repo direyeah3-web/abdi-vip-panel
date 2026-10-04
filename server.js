@@ -113,7 +113,9 @@ function loaderAuth(req, res) {
   const { license_key, device_id, key, license } = req.body;
   const licKey = license_key || key || license;
   if (!licKey) return res.status(400).json({ isValid: false, valid: false, error: 'License required' });
-  const lic = queryOne('SELECT * FROM licenses WHERE license_key = ?', [licKey]);
+  console.log('>>> QUERY licKey:', licKey);
+        const lic = queryOne('SELECT * FROM licenses WHERE license_key = ?', [licKey]);
+        console.log('>>> QUERY RESULT:', JSON.stringify(lic));
   if (!lic) return res.status(401).json({ isValid: false, valid: false, error: 'License not found' });
   if (lic.expires_at && new Date(lic.expires_at) < new Date()) return res.status(403).json({ isValid: false, valid: false, error: 'License expired' });
   if (lic.status === 'used' && lic.device_id && lic.device_id !== device_id) return res.status(403).json({ isValid: false, valid: false, error: 'License locked to another device' });
