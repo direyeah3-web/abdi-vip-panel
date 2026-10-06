@@ -221,7 +221,7 @@ app.get('/api/me', auth, (req, res) => {
 
 app.post('/api/licenses/generate', auth, adminOnly, (req, res) => {
   const { duration, max_devices, custom_key } = req.body;
-  const dur = duration || '30 days';
+  const dur = duration || (days ? days + ' days' : '30 days');
   const maxDev = parseInt(max_devices) || 1;
   const expires = addDuration(dur);
   if (!expires) return res.status(400).json({ error: 'Invalid duration' });
@@ -255,7 +255,7 @@ app.get('/api/admin/users', auth, adminOnly, (req, res) => res.json(queryAll('SE
 app.delete('/api/admin/users/:id', auth, adminOnly, (req, res) => { db.run('DELETE FROM users WHERE id = ?', [req.params.id]); saveDB(); res.json({ ok: true }); });
 app.put('/api/admin/users/:id', auth, adminOnly, (req, res) => { const { role, status } = req.body; if (role) db.run('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]); if (status) db.run('UPDATE users SET status = ? WHERE id = ?', [status, req.params.id]); saveDB(); res.json({ ok: true }); });
 app.delete('/api/admin/licenses/:id', auth, adminOnly, (req, res) => { db.run('DELETE FROM licenses WHERE id = ?', [req.params.id]); saveDB(); res.json({ ok: true }); });
-app.post('/api/admin/licenses/bulk', auth, adminOnly, (req, res) => { const { count, duration, max_devices } = req.body; const num = parseInt(count) || 1; const dur = duration || '30 days'; const maxDev = parseInt(max_devices) || 1; const expires = addDuration(dur); if (!expires) return res.status(400).json({ error: 'Invalid duration' }); const keys = []; for (let i = 0; i < num; i++) { const key = genCode('ABDI-VIP'); db.run('INSERT INTO licenses (license_key, duration, expires_at, max_devices) VALUES (?, ?, ?, ?)', [key, dur, expires, maxDev]); keys.push(key); } saveDB(); res.json({ ok: true, count: keys.length, keys: keys }); });
+app.post('/api/admin/licenses/bulk', auth, adminOnly, (req, res) => { const { count, days, duration, max_devices } = req.body; const num = parseInt(count) || 1; const dur = duration || (days ? days + ' days' : '30 days'); const maxDev = parseInt(max_devices) || 1; const expires = addDuration(dur); if (!expires) return res.status(400).json({ error: 'Invalid duration' }); const keys = []; for (let i = 0; i < num; i++) { const key = genCode('ABDI-VIP'); db.run('INSERT INTO licenses (license_key, duration, expires_at, max_devices) VALUES (?, ?, ?, ?)', [key, dur, expires, maxDev]); keys.push(key); } saveDB(); res.json({ ok: true, count: keys.length, keys: keys }); });
 app.get('/api/admin/referrals', auth, adminOnly, (req, res) => res.json(queryAll('SELECT * FROM referrals ORDER BY id DESC')));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', server: 'ABDI VIP PANEL', time: new Date() }));
 
