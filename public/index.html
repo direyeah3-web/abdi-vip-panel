@@ -586,7 +586,37 @@ async function testWorkerConnection() {
     }
 }
 
-function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
+
+    // ===== EDIT USER ROLE =====
+    async function editUserRole(id, currentRole) {
+        var newRole = prompt('Geli role-ka cusub (user ama admin):', currentRole);
+        if (!newRole) return;
+        if (newRole !== 'user' && newRole !== 'admin') {
+            alert('Role-ku waa inuu noqdaa "user" ama "admin"');
+            return;
+        }
+        try {
+            var token = localStorage.getItem('token');
+            var res = await fetch('/api/admin/users/' + id, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ role: newRole })
+            });
+            if (res.ok) {
+                alert('Role-ka waa la beddelay!');
+                loadUsers();
+            } else {
+                alert('Error changing role');
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+
+    function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
 if(localStorage.getItem('token')){showDashboard();}
 </script>
 </body>
