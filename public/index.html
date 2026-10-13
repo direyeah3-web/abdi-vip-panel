@@ -591,8 +591,8 @@ html, body {
 <script>
 function switchTab(t){document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-register').classList.toggle('active',t==='register');document.getElementById('login-form').style.display=t==='login'?'block':'none';document.getElementById('register-form').style.display=t==='register'?'block':'none';}
 function togglePassword(id,icon){var i=document.getElementById(id);if(i.type==='password'){i.type='text';icon.classList.remove('fa-eye');icon.classList.add('fa-eye-slash');}else{i.type='password';icon.classList.remove('fa-eye-slash');icon.classList.add('fa-eye');}}
-async function handleLogin(e){e.preventDefault();var u=document.getElementById('login-username').value;var p=document.getElementById('login-password').value;var b=e.target.querySelector('button');b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';b.disabled=true;try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});var d=await r.json();if(d.success||d.token){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user||{}));showDashboard();}else{showToast('Login Failed', d.message||d.error||'Invalid credentials', 'error');b.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';b.disabled=false;}}catch(x){alert('Error: '+x.message);b.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';b.disabled=false;}}
-async function handleRegister(e){e.preventDefault();var u=document.getElementById('reg-username').value;var p=document.getElementById('reg-password').value;var f=document.getElementById('reg-fullname').value;try{var r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,fullname:f})});var d=await r.json();if(d.success||d.token){alert('Account created! Please login.');switchTab('login');}else{alert('Registration failed: '+(d.error||'Unknown'));}}catch(x){alert('Error: '+x.message);}}
+async function handleLogin(e){e.preventDefault();var u=document.getElementById('login-username').value;var p=document.getElementById('login-password').value;var b=e.target.querySelector('button');b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';b.disabled=true;try{var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});var d=await r.json();if(d.success||d.token){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user||{}));showDashboard();}else{showToast('Login Failed', d.message||d.error||'Invalid credentials', 'error');b.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';b.disabled=false;}}catch(x){showToast('Error', x.message, 'error');b.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';b.disabled=false;}}
+async function handleRegister(e){e.preventDefault();var u=document.getElementById('reg-username').value;var p=document.getElementById('reg-password').value;var f=document.getElementById('reg-fullname').value;try{var r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,fullname:f})});var d=await r.json();if(d.success||d.token){showToast('Success!', 'Account created! Please login.', 'success');switchTab('login');}else{showToast('Error', d.error||'Registration failed', 'error');}}catch(x){showToast('Error', x.message, 'error');}}
 function showDashboard(){document.getElementById('login').style.display='none';document.getElementById('dashboard').style.display='block';var u=JSON.parse(localStorage.getItem('user')||'{}');if(u.username){document.getElementById('user-name').textContent=u.username;document.getElementById('user-avatar').textContent=u.username.charAt(0).toUpperCase();document.getElementById('user-role').textContent=u.role||'User';}loadPage('dashboard');}
 async function loadPage(p,el){if(el){document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});el.classList.add('active');}var c=document.getElementById('page-content');var u=JSON.parse(localStorage.getItem('user')||'{}');
 if(p==='dashboard'){
@@ -679,15 +679,15 @@ async function loadUsers(){try{var t=localStorage.getItem('token');var r=await f
 async function deleteUser(id){if(!confirm('Delete this user?'))return;var t=localStorage.getItem('token');await fetch('/api/admin/users/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+t}});loadUsers();}
 function showAddUserModal(){document.getElementById('add-user-modal').style.display='flex';}
 function closeAddUserModal(){document.getElementById('add-user-modal').style.display='none';}
-async function addUser(){var u=document.getElementById('new-username').value.trim();var p=document.getElementById('new-password').value.trim();var f=document.getElementById('new-fullname').value.trim();if(!u||!p){alert('Username and password required');return;}try{var r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,fullname:f})});var d=await r.json();if(d.success||d.token){closeAddUserModal();alert('User created!');loadUsers();}else{alert('Error: '+(d.error||'Unknown'));}}catch(e){alert('Error: '+e.message);}}
+async function addUser(){var u=document.getElementById('new-username').value.trim();var p=document.getElementById('new-password').value.trim();var f=document.getElementById('new-fullname').value.trim();if(!u||!p){showToast('Warning', 'Username and password required', 'info');return;}try{var r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,fullname:f})});var d=await r.json();if(d.success||d.token){closeAddUserModal();showToast('Success!', 'User cusub waa la abuuray!', 'success');loadUsers();}else{showToast('Error', d.error||'Unknown error', 'error');}}catch(e){showToast('Error', e.message, 'error');}}
 async function loadLicenses(){try{var t=localStorage.getItem('token');var r=await fetch('/api/licenses',{headers:{'Authorization':'Bearer '+t}});var l=await r.json();var tb=document.getElementById('licenses-tbody');if(!tb)return;if(!Array.isArray(l)||l.length===0){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;">No licenses</td></tr>';return;}tb.innerHTML=l.map(function(x){var col=x.status==='unused'?'#10b981':'#f59e0b';return '<tr><td><code style="background:#0a0a0f;padding:4px 8px;border-radius:6px;font-size:12px;">'+x.license_key+'</code></td><td>'+(x.duration||'-')+'</td><td><span style="padding:4px 10px;border-radius:20px;background:'+col+'20;color:'+col+';font-size:12px;font-weight:600;">'+x.status+'</span></td><td><button onclick="copyLicense(\''+x.license_key+'\')" style="background:var(--purple);border:none;color:white;padding:6px 10px;border-radius:8px;cursor:pointer;margin-right:5px;"><i class="fa-solid fa-copy"></i></button><button onclick="deleteLicense('+x.id+')" style="background:var(--red);border:none;color:white;padding:6px 10px;border-radius:8px;cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>';}).join('');}catch(e){console.error(e);}}
 async function deleteLicense(id){if(!confirm('Delete this license?'))return;var t=localStorage.getItem('token');await fetch('/api/admin/licenses/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+t}});loadLicenses();}
-function copyLicense(k){navigator.clipboard.writeText(k).then(function(){alert('Copied: '+k);});}
+function copyLicense(k){navigator.clipboard.writeText(k).then(function(){showToast('Copied!', 'License key: '+k, 'success');});}
 function showLicenseModal(){document.getElementById('license-modal').style.display='flex';}
 function closeLicenseModal(){document.getElementById('license-modal').style.display='none';}
 var selectedDays=1;
 function selectDuration(b,d){document.querySelectorAll('.duration-btn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');selectedDays=d;document.getElementById('custom-days').style.display=d==='custom'?'block':'none';}
-async function generateLicenses(){var d=selectedDays;if(d==='custom'){d=parseInt(document.getElementById('custom-days').value);if(!d){alert('Enter valid days');return;}}var q=parseInt(document.getElementById('license-quantity').value)||1;try{var t=localStorage.getItem('token');var r=await fetch('/api/admin/licenses/bulk',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({days:d,quantity:q})});var data=await r.json();if(data.ok || data.success){closeLicenseModal();showToast('Success!', q+' license(s) waa la abuuray!', 'success');loadLicenses();}else{alert('Error: '+(data.error||'Unknown'));}}catch(e){alert('Error: '+e.message);}}
+async function generateLicenses(){var d=selectedDays;if(d==='custom'){d=parseInt(document.getElementById('custom-days').value);if(!d){showToast('Warning', 'Fadlan geli tirada maalmood ee saxda ah', 'info');return;}}var q=parseInt(document.getElementById('license-quantity').value)||1;try{var t=localStorage.getItem('token');var r=await fetch('/api/admin/licenses/bulk',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({days:d,quantity:q})});var data=await r.json();if(data.ok || data.success){closeLicenseModal();showToast('Success!', q+' license(s) waa la abuuray!', 'success');loadLicenses();}else{showToast('Error', data.error||'Unknown error', 'error');}}catch(e){showToast('Error', e.message, 'error');}}
 async function loadReferrals(){try{var t=localStorage.getItem('token');var r=await fetch('/api/admin/referrals',{headers:{'Authorization':'Bearer '+t}});var d=await r.json();var tb=document.getElementById('referrals-tbody');if(!tb)return;if(!Array.isArray(d)||d.length===0){tb.innerHTML='<tr><td colspan="3" style="text-align:center;padding:20px;">No referrals</td></tr>';return;}tb.innerHTML=d.map(function(x){return '<tr><td>#'+x.id+'</td><td>'+x.referrer_code+'</td><td>'+x.referred_user+'</td></tr>';}).join('');}catch(e){console.error(e);}}
 
 function toggleSidebar() {
@@ -843,7 +843,7 @@ async function loadSystemStatus() {
 async function testWorkerConnection() {
     var url = document.getElementById('worker-url-input').value.trim();
     var result = document.getElementById('test-result');
-    if (!url) { alert('Enter Worker URL'); return; }
+    if (!url) { showToast('Warning', 'Fadlan geli Worker URL', 'info'); return; }
     
     result.innerHTML = '<p style="color:var(--muted);">Testing connection...</p>';
     
@@ -894,7 +894,7 @@ async function testWorkerConnection() {
         var newRole = prompt('Geli role-ka cusub (user ama admin):', currentRole);
         if (!newRole) return;
         if (newRole !== 'user' && newRole !== 'admin') {
-            alert('Role-ku waa inuu noqdaa "user" ama "admin"');
+            showToast('Warning', 'Role-ku waa inuu noqdaa user ama admin', 'info');
             return;
         }
         try {
@@ -1040,7 +1040,7 @@ async function testWorkerConnection() {
             a.download = 'abdi-vip-users-' + Date.now() + '.csv';
             a.click();
             window.URL.revokeObjectURL(url);
-        } catch(e) { alert('Error exporting: ' + e.message); }
+        } catch(e) { showToast('Error', 'Export failed: ' + e.message, 'error'); }
     }
     
     function showNotifications() {
@@ -1100,7 +1100,7 @@ async function testWorkerConnection() {
             var data = await res.json();
             if (data.ok || data.success) {
                 closeModernModal();
-                alert(qty + ' license(s) waa la abuuray!');
+                showToast('Success!', qty + ' license(s) waa la abuuray!', 'success');
                 loadLicenses();
                 if (typeof fetchStats === 'function') fetchStats();
             } else {
