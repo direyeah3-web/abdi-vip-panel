@@ -606,13 +606,14 @@ if(p==='dashboard'){
             '<div class="panel"><div class="panel-header"><h3>License Status</h3></div><canvas id="licenseChart" height="220"></canvas></div>'+
         '</div>'+
         '<div class="content-grid" style="margin-top:20px;">'+
-            '<div class="panel"><div class="panel-header"><h3>Revenue</h3><span style="color:var(--green);font-size:13px;font-weight:600;"><i class="fa-solid fa-arrow-up"></i> +12.5%</span></div>'+
-                '<div style="display:flex;align-items:center;gap:20px;padding:10px 0;">'+
-                    '<div style="width:60px;height:60px;background:linear-gradient(135deg,var(--primary),var(--purple));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;"><i class="fa-solid fa-dollar-sign"></i></div>'+
-                    '<div><div style="display:flex;align-items:center;gap:15px;"><div style="width:70px;height:70px;border-radius:50%;overflow:hidden;border:3px solid var(--primary);box-shadow:0 0 25px rgba(139,92,246,0.4);"><img src="/logo.png" alt="ABDI VIP" style="width:100%;height:100%;object-fit:cover;"></div><div><div style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#fff,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ABDI VIP</div><div style="color:var(--muted);font-size:13px;">Autonomous Panel Owner</div></div></div></div>'+
-                '</div>'+
-            '</div>'+
-            '<div class="panel"><div class="panel-header"><h3>Top Users</h3><a href="#">View All</a></div><div id="top-users"><p style="color:var(--muted);text-align:center;padding:20px;">Loading...</p></div></div>'+
+            <div class="panel" style="display:flex;align-items:center;justify-content:center;padding:30px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(139,92,246,0.2) 0%,transparent 60%);animation:floaty 6s ease-in-out infinite;pointer-events:none;"></div>
+                <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+                    <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;border:4px solid var(--primary);box-shadow:0 0 50px rgba(139,92,246,0.6),0 0 100px rgba(139,92,246,0.3);animation:floaty 4s ease-in-out infinite;">
+                        <img src="/logo.png" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                </div>
+            </div>'<div class="panel"><div class="panel-header"><h3>Top Users</h3><a href="#">View All</a></div><div id="top-users"><p style="color:var(--muted);text-align:center;padding:20px;">Loading...</p></div></div>'+
         '</div>'+
         '<div class="content-grid" style="margin-top:20px;">'+
             '<div class="panel"><div class="panel-header"><h3>Recent Activity</h3><a href="#">View All</a></div><div id="activity-list"><p style="color:var(--muted);text-align:center;padding:20px;">Loading...</p></div></div>'+
