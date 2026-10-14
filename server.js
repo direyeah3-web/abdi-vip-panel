@@ -1040,7 +1040,6 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
             return res.status(400).json({ success: false, error: 'apkPath waa loo baahan yahay' });
         }
         const fs = require('fs');
-        const { execSync } = require('child_process');
         if (!fs.existsSync(apkPath)) {
             return res.status(400).json({ success: false, error: 'APK ma jiro: ' + apkPath });
         }
@@ -1048,27 +1047,106 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
         const zip = new AdmZip(apkPath);
         const entries = zip.getEntries();
 
-        // 1. URLs-ka oo dhan
-        const urls = new Set();
-        const licenses = new Set();
+        // ===== 1. URLs (file -> line -> url) =====
+        const urlsList = [];
         const smaliFiles = [];
         const nativeLibs = [];
-        const protectionSigns = [];
+        const dexFiles = [];
 
-        // Baadh entries
+        // ===== 2. License/auth/verification routine =====
+        const licenseRoutines = [];
+        const signatureChecks = [];
+        const integrityChecks = [];
+        const startupCalls = [];
+
+        const urlRegex = /https?:\/\/[^\s"']+/g;
+        const licKeywords = ['license', 'verify', 'auth', 'activation', 'validate', 'checkLicense', 'checkKey', 'Premium', 'vip'];
+        const sigKeywords = ['getPackageInfo', 'GET_SIGNATURES', 'MessageDigest', 'PackageManager', 'signature', 'Signature', 'certificate', 'CERT', 'SHA-1', 'SHA1', 'MD5', 'CRC'];
+        const integKeywords = ['SafetyNet', 'PlayIntegrity', 'attest', 'rootBeer', 'RootBeer', 'isRooted', 'emulator', 'isEmulator', 'debugger', 'isDebuggerConnected', 'isDebug', 'tamper', 'Tamper', 'Integrity'];
+        const startupKeywords = ['onCreate', 'Application', 'attachBaseContext', '<init>', 'onStart', 'LauncherActivity'];
+
+        // Track file name
+        const getName = (e) => e.entryName;
+
         for (const entry of entries) {
             const name = entry.entryName;
 
             // Smali files
             if (name.endsWith('.smali')) {
                 smaliFiles.push(name);
+                let content = '';
                 try {
-                    const content = entry.getData().toString('utf8');
-                    const urlMatches = content.match(/https?:\/\/[^\s"']+/g) || [];
-                    urlMatches.forEach(u => urls.add(u));
-                    const licMatches = content.match(/ABDI-[A-Z0-9-]+/g) || [];
-                    licMatches.forEach(l => licenses.add(l));
-                } catch (e) {}
+                    const buf = entry.getData();
+                    content = buf.toString('utf8');
+                } catch (err) {
+                    try { content = entry.getData().toString('latin1'); } catch (e) {}
+                }
+
+                const lines = content.split('\n');
+
+                // URLs with line numbers
+                lines.forEach((line, idx) => {
+                    const matches = line.match(urlRegex);
+                    if (matches) {
+                        matches.forEach(u => {
+                            urlsList.push({ file: name, line: idx + 1, url: u });
+                        });
+                    }
+                });
+
+                // License routines
+                const lowerName = name.toLowerCase();
+                const lowerContent = content.toLowerCase();
+                let licMatch = licKeywords.some(k => lowerName.includes(k.toLowerCase()) || lowerContent.includes(k.toLowerCase()));
+                if (licMatch) {
+                    // Soo qaado class name iyo method
+                    const classMatch = content.match(/\.class[^\n]*/);
+                    const methodMatch = content.match(/\.method[^\n]*/);
+                    lines.forEach((line, idx) => {
+                        if (licKeywords.some(k => line.toLowerCase().includes(k.toLowerCase()))) {
+                            licenseRoutines.push({
+                                file: name,
+                                line: idx + 1,
+                                class_name: classMatch ? classMatch[0] : 'N/A',
+                                method_name: methodMatch ? methodMatch[0] : 'N/A',
+                                smali_line: line.trim().substring(0, 200)
+                            });
+                        }
+                    });
+                }
+
+                // Signature checks
+                lines.forEach((line, idx) => {
+                    if (sigKeywords.some(k => line.includes(k))) {
+                        signatureChecks.push({
+                            file: name,
+                            line: idx + 1,
+                            match: line.trim().substring(0, 200)
+                        });
+                    }
+                });
+
+                // Integrity checks
+                lines.forEach((line, idx) => {
+                    if (integKeywords.some(k => line.includes(k))) {
+                        integrityChecks.push({
+                            file: name,
+                            line: idx + 1,
+                            match: line.trim().substring(0, 200)
+                        });
+                    }
+                });
+
+                // Startup calls
+                lines.forEach((line, idx) => {
+                    if (startupKeywords.some(k => line.includes(k)) && urlRegex.test(line)) {
+                        startupCalls.push({
+                            file: name,
+                            line: idx + 1,
+                            method: line.trim().substring(0, 200)
+                        });
+                    }
+                });
             }
 
             // Native libs
@@ -1076,50 +1154,44 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
                 nativeLibs.push(name);
                 try {
                     const buf = entry.getData();
-                    const strings = buf.toString('latin1').match(/https?:\/\/[^\x00-\x20]+/g) || [];
-                    strings.forEach(s => urls.add(s));
+                    const str = buf.toString('latin1');
+                    const matches = str.match(urlRegex) || [];
+                    matches.forEach(u => {
+                        urlsList.push({ file: name, line: 0, url: u });
+                    });
+                    // License key strings
+                    const licStrings = str.match(/ABDI-[A-Z0-9-]+/g) || [];
+                    licStrings.forEach(l => {
+                        licenseRoutines.push({ file: name, line: 0, match: l });
+                    });
                 } catch (e) {}
             }
 
-            // Protection signs
-            if (name.includes('rootbeer') || name.includes('safetynet') ||
-                name.includes('integrity') || name.includes('ssl') ||
-                name.includes('pinning') || name.includes('obfuscat') ||
-                name.includes('proguard') || name.includes('firebase')) {
-                protectionSigns.push(name);
+            // DEX files
+            if (name.endsWith('.dex')) {
+                dexFiles.push(name);
             }
         }
 
-        // 2. Response format-ka loader-ka
-        let responseFormat = null;
-        const smaliContent = smaliFiles.length > 0 ? (() => {
-            try {
-                const entry = zip.getEntry(smaliFiles.find(f => f.includes('LoginActivity') || f.includes('PanelLicense')));
-                if (entry) return entry.getData().toString('utf8');
-                return '';
-            } catch (e) { return ''; }
-        })() : '';
-
-        // Response format hints
-        if (smaliContent.includes('"status"')) responseFormat = 'JSON: {status, data, reason}';
-        else if (smaliContent.includes('"success"')) responseFormat = 'JSON: {success, data}';
-
-        // 3. License keys (ka database-ka sidoo kale)
-        const dbLicenses = queryAll('SELECT license_key FROM licenses LIMIT 100') || [];
-        dbLicenses.forEach(l => licenses.add(l.license_key));
+        // Database licenses
+        const dbLicenses = queryAll('SELECT license_key FROM licenses LIMIT 200') || [];
+        const allLicenses = dbLicenses.map(l => l.license_key);
 
         res.json({
             success: true,
             filename: filename,
             total_entries: entries.length,
-            urls: Array.from(urls),
-            licenses: Array.from(licenses),
-            smali_files: smaliFiles.slice(0, 50),
-            native_libs: nativeLibs,
-            protection_signs: [...new Set(protectionSigns)],
-            response_format: responseFormat,
-            urls_count: urls.size,
-            licenses_count: licenses.size
+            smali_files_count: smaliFiles.length,
+            native_libs_count: nativeLibs.length,
+            dex_files_count: dexFiles.length,
+            urls: urlsList,
+            license_routines: licenseRoutines.slice(0, 100),
+            signature_checks: signatureChecks.slice(0, 100),
+            integrity_checks: integrityChecks.slice(0, 100),
+            startup_calls: startupCalls.slice(0, 50),
+            db_licenses: allLicenses,
+            urls_count: urlsList.length,
+            licenses_count: licenseRoutines.length
         });
     } catch (err) {
         console.error('APK analyze error:', err);
