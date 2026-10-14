@@ -762,7 +762,7 @@ if (bot) {
             const keyboard = {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: '📋 COPY CODE', callback_data: 'copy_' + result.key }]
+                        [{ text: '📋 COPY CODE', copy_text: { text: result.key } }]
                     ]
                 }
             };
