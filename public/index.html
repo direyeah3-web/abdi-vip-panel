@@ -865,12 +865,12 @@ function toggleTheme() {
         root.removeAttribute('data-theme');
         icon.classList.remove('fa-moon');
         icon.classList.add('fa-sun');
-        localStorage.setItem('theme', 'dark');
+        localStorage.setItem('abdi_theme', 'dark');
     } else {
         root.setAttribute('data-theme', 'light');
         icon.classList.remove('fa-sun');
         icon.classList.add('fa-moon');
-        localStorage.setItem('theme', 'light');
+        localStorage.setItem('abdi_theme', 'light');
     }
 }
 
