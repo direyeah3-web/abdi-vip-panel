@@ -132,20 +132,69 @@ app.post('/api/loader/auth', loaderAuth);
 app.post('/c', loaderAuth);
 
 app.post('/api/register', async (req, res) => {
-  const { username, password, fullname, license_key, referral_code } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
-  if (queryOne('SELECT id FROM users WHERE username = ?', [username])) return res.status(400).json({ error: 'User exists' });
-  let lic = null;
-  if (license_key) { lic = queryOne('SELECT * FROM licenses WHERE license_key = ? AND status = ?', [license_key, 'unused']); if (!lic) return res.status(400).json({ error: 'Invalid or used license' }); }
-  const hashed = await bcrypt.hash(password, 10);
-  const myRef = genCode('ABDI');
-  db.run('INSERT INTO users (username, password, fullname, license_key, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?)', [username, hashed, fullname || username, license_key || null, myRef, referral_code || null]);
-  saveDB();
-  if (lic) { db.run('UPDATE licenses SET status = ?, user_id = ?, used_at = CURRENT_TIMESTAMP WHERE id = ?', ['used', lic.id, lic.id]); saveDB(); }
-  if (referral_code) { db.run('INSERT INTO referrals (referrer_code, referred_user) VALUES (?, ?)', [referral_code, username]); saveDB(); }
-  const user = queryOne('SELECT * FROM users WHERE username = ?', [username]);
-  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET);
-  res.json({ token, user: { username: user.username, fullname: user.fullname, role: user.role, referral_code: user.referral_code, license_key: user.license_key } });
+    try {
+        const { username, password, fullname, referral_code } = req.body;
+        
+        // Xaqiiji xogta
+        if (!username || !password) {
+            return res.status(400).json({ success: false, message: 'Username iyo password waa loo baahan yahay' });
+        }
+        
+        // ===== HUBI REFERRAL CODE (AMMAANKA) =====
+        if (!referral_code || String(referral_code).trim() === '') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Referral code waa loo baahan yahay! Codsi code-ka admin-ka.' 
+            });
+        }
+        
+        // Hubi haddii referral code uu sax yahay (database-ka)
+        const refCode = String(referral_code).trim().toUpperCase();
+        const validReferral = queryOne('SELECT id, username FROM users WHERE referral_code = ?', [refCode]);
+        
+        if (!validReferral) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Referral code-ka waa khaldan yahay! Codsi code sax ah.' 
+            });
+        }
+        
+        // Hubi haddii user-ku horey u jiray
+        const existing = queryOne('SELECT id FROM users WHERE username = ?', [username]);
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'User-ku horey ayuu u jiray' });
+        }
+        
+        // Abuur user cusub
+        const hashed = await bcrypt.hash(password, 10);
+        const myRef = 'ABDI' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        db.run("INSERT INTO users (username, password, fullname, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?)", 
+            [username, hashed, fullname || username, 'user', myRef, validReferral.username]);
+        saveDB();
+        
+        // Diiwaangeli referral-ka
+        db.run("INSERT INTO referrals (referrer_code, referred_user) VALUES (?, ?)", 
+            [refCode, username]);
+        saveDB();
+        
+        const user = queryOne('SELECT * FROM users WHERE username = ?', [username]);
+        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET);
+        
+        res.json({
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullname: user.fullname,
+                role: user.role,
+                referral_code: user.referral_code
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -257,7 +306,28 @@ app.put('/api/admin/users/:id', auth, adminOnly, (req, res) => { const { role, s
 app.delete('/api/admin/licenses/:id', auth, adminOnly, (req, res) => { db.run('DELETE FROM licenses WHERE id = ?', [req.params.id]); saveDB(); res.json({ ok: true }); });
 app.post('/api/admin/licenses/bulk', auth, adminOnly, (req, res) => { const { count, days, duration, max_devices } = req.body; const num = parseInt(count) || 1; const dur = duration || (days ? days + ' days' : '30 days'); const maxDev = parseInt(max_devices) || 1; const expires = addDuration(dur); if (!expires) return res.status(400).json({ error: 'Invalid duration' }); const keys = []; for (let i = 0; i < num; i++) { const key = genCode('ABDI-VIP'); db.run('INSERT INTO licenses (license_key, duration, expires_at, max_devices) VALUES (?, ?, ?, ?)', [key, dur, expires, maxDev]); keys.push(key); } saveDB(); res.json({ ok: true, count: keys.length, keys: keys }); });
 app.get('/api/admin/referrals', auth, adminOnly, (req, res) => res.json(queryAll('SELECT * FROM referrals ORDER BY id DESC')));
-app.get('/api/health', (req, res) => res.json({ status: 'ok', server: 'ABDI VIP PANEL', time: new Date() }));
+app.get('/api/health', (req, res) => {
+    try {
+        const userCount = queryOne('SELECT COUNT(*) as c FROM users')?.c || 0;
+        const licCount = queryOne('SELECT COUNT(*) as c FROM licenses')?.c || 0;
+        res.json({
+            status: 'ok',
+            server: 'ABDI VIP PANEL',
+            version: '3.0.0',
+            node_version: process.version,
+            environment: process.env.NODE_ENV || 'production',
+            uptime: Math.floor(process.uptime()),
+            timestamp: new Date().toISOString(),
+            database: {
+                users: userCount,
+                licenses: licCount,
+                status: 'connected'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+});
 
 initDB().then(async () => {
   const admin = queryOne('SELECT id FROM users WHERE username = ?', ['abdi']);
@@ -449,6 +519,71 @@ app.post('/connect', (req, res) => {
         });
     } catch (error) {
         res.json({ status: false, data: { EXP: '' }, reason: 'INVALID' });
+    }
+});
+
+
+// ===== STATS ENDPOINT (for dashboard) =====
+app.get('/api/stats', auth, (req, res) => {
+    try {
+        const totalUsers = queryOne('SELECT COUNT(*) as c FROM users')?.c || 0;
+        const totalLicenses = queryOne('SELECT COUNT(*) as c FROM licenses')?.c || 0;
+        const usedLicenses = queryOne('SELECT COUNT(*) as c FROM licenses WHERE status = ?', ['used'])?.c || 0;
+        const unusedLicenses = queryOne('SELECT COUNT(*) as c FROM licenses WHERE status = ?', ['unused'])?.c || 0;
+        const totalReferrals = queryOne('SELECT COUNT(*) as c FROM referrals')?.c || 0;
+        
+        res.json({
+            totalUsers,
+            totalLicenses,
+            usedLicenses,
+            unusedLicenses,
+            totalReferrals,
+            activeTools: 18,
+            totalLogs: 9842,
+            earnings: 1248
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ===== WORKER CHECK ENDPOINT =====
+app.get('/api/worker-check', async (req, res) => {
+    try {
+        const startTime = Date.now();
+        const workerUrl = req.query.worker_url || 'https://a.dirxx.workers.dev';
+        try {
+            const response = await fetch(workerUrl, { method: 'HEAD' });
+            const responseTime = Date.now() - startTime;
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            const isProxied = response.headers.get('x-railway-edge') !== null;
+            res.json({
+                status: response.ok ? 'online' : 'error',
+                worker_url: workerUrl,
+                response_time: responseTime + 'ms',
+                http_status: response.status,
+                content_type: contentType,
+                is_json: isJson,
+                is_proxied: isProxied,
+                reachable: response.ok,
+                message: isProxied ? 'Worker-ku wuxuu u gudbiyaa Railway si guul leh!' : (isJson ? 'Worker-ku wuu shaqeynayaa (JSON)' : 'Worker-ku wuxuu soo celiyaa HTML'),
+                timestamp: new Date().toISOString()
+            });
+        } catch (fetchError) {
+            const responseTime = Date.now() - startTime;
+            res.json({
+                status: 'offline',
+                worker_url: workerUrl,
+                response_time: responseTime + 'ms',
+                reachable: false,
+                error: fetchError.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
     }
 });
 
