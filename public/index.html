@@ -726,7 +726,10 @@ else if(p==='status'){
                 '<div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-clock"></i></div><div class="stat-value" id="cw-response">...</div><div class="stat-label">Response Time</div></div>'+
                 '<div class="stat-card"><div class="stat-icon yellow"><i class="fa-solid fa-globe"></i></div><div class="stat-value" id="cw-url" style="font-size:11px;">...</div><div class="stat-label">Worker URL</div></div>'+
             '</div>'+
-            '<div class="panel" style="margin-top:20px;"><div class="panel-header"><h3><i class="fa-solid fa-code"></i> Worker Code</h3><button class="btn-primary" onclick="saveWorkerCode()" id="cw-save-btn"><i class="fa-solid fa-save"></i> Deploy</button></div>'+
+            '<div class="panel" style="margin-top:20px;"><div class="panel-header"><h3><i class="fa-solid fa-code"></i> Worker Code</h3><button class="btn-secondary" onclick="copyWorkerCode()" style="margin-right:8px;"><i class="fa-solid fa-copy"></i> Copy</button>
+                    <button class="btn-secondary" onclick="selectAllWorkerCode()" style="margin-right:8px;"><i class="fa-solid fa-check-double"></i> Select All</button>
+                    <button class="btn-secondary" onclick="backupWorkerCode()" style="margin-right:8px;"><i class="fa-solid fa-download"></i> Backup</button>
+                    <button class="btn-primary" onclick="saveWorkerCode()" id="cw-save-btn"><i class="fa-solid fa-save"></i> Deploy</button></div>'+
                 '<textarea id="cw-code" style="width:100%;min-height:400px;background:#0a0a0f;color:#e6f1ff;border:1px solid var(--border);border-radius:10px;padding:15px;font-family:monospace;font-size:13px;line-height:1.5;"></textarea>'+
                 '<div id="cw-result" style="margin-top:15px;"></div>'+
             '</div>';
@@ -1401,6 +1404,56 @@ async function loadWorkerPage(){
             codeEl.value='// Khalad: '+(cd.error||'Code lama helin');
         }
     }catch(e){console.error('Worker page error:',e);}
+}
+
+function copyWorkerCode(){
+    var code=document.getElementById('cw-code').value;
+    if(!code){showToast('Warning','Code ma jiro','info');return;}
+    if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(code).then(function(){
+            showToast('Success','Code-ka waa la koobiyay!','success');
+        }).catch(function(){
+            // Fallback: textarea select + execCommand
+            var ta=document.getElementById('cw-code');
+            ta.select();
+            document.execCommand('copy');
+            showToast('Success','Code-ka waa la koobiyay!','success');
+        });
+    } else {
+        var ta=document.getElementById('cw-code');
+        ta.select();
+        document.execCommand('copy');
+        showToast('Success','Code-ka waa la koobiyay!','success');
+    }
+}
+
+function selectAllWorkerCode(){
+    var ta=document.getElementById('cw-code');
+    if(!ta||!ta.value){showToast('Warning','Code ma jiro','info');return;}
+    ta.focus();
+    ta.select();
+    showToast('Success','Code-ka oo dhan waa la doortay!','success');
+}
+
+async function backupWorkerCode(){
+    var code=document.getElementById('cw-code').value;
+    if(!code){showToast('Warning','Code ma jiro','info');return;}
+    try{
+        var t=localStorage.getItem('token');
+        var r=await fetch('/api/worker/backup',{
+            method:'POST',
+            headers:{'Authorization':'Bearer '+t,'Content-Type':'application/json'},
+            body:JSON.stringify({code:code})
+        });
+        var d=await r.json();
+        if(d.success){
+            showToast('Success','Backup la keydiyay!','success');
+        } else {
+            showToast('Error',d.error||'Backup wuu guuldareystay','error');
+        }
+    }catch(e){
+        showToast('Error',e.message,'error');
+    }
 }
 
 async function saveWorkerCode(){

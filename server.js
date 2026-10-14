@@ -995,5 +995,21 @@ app.get('/api/worker/status', auth, adminOnly, async (req, res) => {
     }
 });
 
+// POST /api/worker/backup — keydi code-ka worker-ka
+app.post('/api/worker/backup', auth, adminOnly, async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) {
+            return res.status(400).json({ success: false, error: 'Code ma jiro' });
+        }
+        const fs = require('fs');
+        const backupFile = './worker.js.backup';
+        fs.writeFileSync(backupFile, code, 'utf-8');
+        res.json({ success: true, message: 'Backup la keydiyay', file: backupFile, size: code.length });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.listen(PORT, () => console.log('ABDI VIP PANEL running on port ' + PORT));
 });
