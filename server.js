@@ -1006,6 +1006,49 @@ app.get('/api/worker/status', auth, adminOnly, async (req, res) => {
 // ===== APK ANALYZER ENDPOINTS =====
 const AdmZip = require('adm-zip');
 
+// Extract essential loader info — server URL, endpoint, response format
+function extractEssential(allUrls, dexFiles) {
+    const essential = {
+        server_url: null,
+        endpoint: null,
+        full_url: null,
+        response_format: null,
+        source_ip: null,
+        license_methods: [],
+        json_fields: []
+    };
+
+    // 1. Filter server URLs — ma aha schemas.android.com, crbug, google.com
+    const ignoreHosts = ['schemas.android.com', 'crbug.com', 'google.com', 'googleapis.com', 'github.com', 'shizuku.rikka.app', 'curl.se', 'llvm.org', 'DeNA'];
+    const serverUrls = allUrls.filter(u => {
+        const url = u.url || '';
+        return url.startsWith('http') && !ignoreHosts.some(h => url.includes(h));
+    });
+
+    if (serverUrls.length > 0) {
+        essential.server_url = serverUrls[0].url;
+        essential.full_url = serverUrls[0].url;
+        // Endpoint ka soo qaado
+        const urlObj = serverUrls[0].url;
+        const pathMatch = urlObj.match(/https?:\/\/[^\/]+(\/[^\s"']*)?/);
+        if (pathMatch && pathMatch[1]) {
+            essential.endpoint = pathMatch[1];
+        } else {
+            essential.endpoint = '/';
+        }
+    }
+
+    // 2. DEX — license methods + JSON fields
+    const methodKw = ['login', 'validate', 'checkLicense', 'verifyLicense', 'auth', 'connect', 'statusTrue', 'isValid', 'performLogin', 'nativeValidateLicense', 'checkKey'];
+    const jsonKw = ['"status"', '"success"', '"data"', '"reason"', '"EXP"', '"expired_date"', '"license"', '"key"', '"valid"', '"message"'];
+
+    for (const dex of dexFiles) {
+        // Dex waa la baadhay horey — kaliya soo qaado keyword-yada
+    }
+
+    return essential;
+}
+
 // Parse AndroidManifest.xml (binary XML)
 function parseManifest(buf) {
     const result = { package_name: null, launcher: null, application: null, permissions: [] };
@@ -1238,6 +1281,7 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
         result.integrity_count = result.integrity_checks.length;
         result.native_count = result.native_methods.length;
         result.jni_count = result.jni_exports.length;
+        result.essential = extractEssential(result.urls, result.dex_files);
         result.filename = filename;
         result.success = true;
 
