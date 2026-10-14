@@ -198,6 +198,15 @@ app.post('/api/register', async (req, res) => {
             [username, hashed, fullname || username, 'user', myRef, validReferral.username]);
         saveDB();
         
+        // Telegram notification — user cusub
+        sendTelegramNotification(
+            '🆕 <b>User Cusub!</b>\n\n' +
+            '👤 Username: <b>' + username + '</b>\n' +
+            '🔑 Referral Code: <code>' + (refCode || 'N/A') + '</code>\n' +
+            '👥 Referred By: <b>' + (validReferral ? validReferral.username : 'N/A') + '</b>\n' +
+            '🕐 Waqti: ' + new Date().toLocaleString()
+        );
+        
         // Diiwaangeli referral-ka
         db.run("INSERT INTO referrals (referrer_code, referred_user) VALUES (?, ?)", 
             [refCode, username]);
