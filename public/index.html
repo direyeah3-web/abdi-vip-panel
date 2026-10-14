@@ -1769,7 +1769,7 @@ async function sendAIMessage(){
     localStorage.setItem('ai_chat',JSON.stringify(msgs));
     loadAIChat();
     var el=document.getElementById('ai-messages');
-    el.innerHTML+='<div style="display:flex;gap:12px;margin-bottom:20px;"><div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#00d4ff,#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-robot" style="font-size:14px;color:#fff;"></i></div><div style="padding:12px 16px;border-radius:18px;border-bottom-left-radius:4px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:14px;"><i class="fa-solid fa-circle-notch fa-spin"></i> AI wuu fikirayaa...</div></div>';
+    el.innerHTML+='<div style="display:flex;gap:12px;margin-bottom:20px;"><div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#00d4ff,#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-robot" style="font-size:14px;color:#fff;"></i></div><div style="padding:12px 16px;border-radius:18px;border-bottom-left-radius:4px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:14px;"><span style="display:inline-block;">●</span> <span style="display:inline-block;animation:pulse 1.4s infinite;">●</span> <span style="display:inline-block;animation:pulse 1.4s infinite 0.2s;">●</span></div></div>';
     el.scrollTop=el.scrollHeight;
     try{
         var t=localStorage.getItem('token');
