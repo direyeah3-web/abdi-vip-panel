@@ -879,7 +879,7 @@ function showNotifications() {
 }
 
 (function() {
-    var saved = localStorage.getItem('theme');
+    var saved = localStorage.getItem('abdi_theme') || localStorage.getItem('theme');
     if (saved === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
         setTimeout(function() {
