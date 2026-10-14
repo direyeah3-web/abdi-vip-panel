@@ -257,7 +257,28 @@ app.put('/api/admin/users/:id', auth, adminOnly, (req, res) => { const { role, s
 app.delete('/api/admin/licenses/:id', auth, adminOnly, (req, res) => { db.run('DELETE FROM licenses WHERE id = ?', [req.params.id]); saveDB(); res.json({ ok: true }); });
 app.post('/api/admin/licenses/bulk', auth, adminOnly, (req, res) => { const { count, days, duration, max_devices } = req.body; const num = parseInt(count) || 1; const dur = duration || (days ? days + ' days' : '30 days'); const maxDev = parseInt(max_devices) || 1; const expires = addDuration(dur); if (!expires) return res.status(400).json({ error: 'Invalid duration' }); const keys = []; for (let i = 0; i < num; i++) { const key = genCode('ABDI-VIP'); db.run('INSERT INTO licenses (license_key, duration, expires_at, max_devices) VALUES (?, ?, ?, ?)', [key, dur, expires, maxDev]); keys.push(key); } saveDB(); res.json({ ok: true, count: keys.length, keys: keys }); });
 app.get('/api/admin/referrals', auth, adminOnly, (req, res) => res.json(queryAll('SELECT * FROM referrals ORDER BY id DESC')));
-app.get('/api/health', (req, res) => res.json({ status: 'ok', server: 'ABDI VIP PANEL', time: new Date() }));
+app.get('/api/health', (req, res) => {
+    try {
+        const userCount = queryOne('SELECT COUNT(*) as c FROM users')?.c || 0;
+        const licCount = queryOne('SELECT COUNT(*) as c FROM licenses')?.c || 0;
+        res.json({
+            status: 'ok',
+            server: 'ABDI VIP PANEL',
+            version: '3.0.0',
+            node_version: process.version,
+            environment: process.env.NODE_ENV || 'production',
+            uptime: Math.floor(process.uptime()),
+            timestamp: new Date().toISOString(),
+            database: {
+                users: userCount,
+                licenses: licCount,
+                status: 'connected'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+});
 
 initDB().then(async () => {
   const admin = queryOne('SELECT id FROM users WHERE username = ?', ['abdi']);
@@ -474,6 +495,46 @@ app.get('/api/stats', auth, (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ===== WORKER CHECK ENDPOINT =====
+app.get('/api/worker-check', async (req, res) => {
+    try {
+        const startTime = Date.now();
+        const workerUrl = req.query.worker_url || 'https://a.dirxx.workers.dev';
+        try {
+            const response = await fetch(workerUrl, { method: 'HEAD' });
+            const responseTime = Date.now() - startTime;
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            const isProxied = response.headers.get('x-railway-edge') !== null;
+            res.json({
+                status: response.ok ? 'online' : 'error',
+                worker_url: workerUrl,
+                response_time: responseTime + 'ms',
+                http_status: response.status,
+                content_type: contentType,
+                is_json: isJson,
+                is_proxied: isProxied,
+                reachable: response.ok,
+                message: isProxied ? 'Worker-ku wuxuu u gudbiyaa Railway si guul leh!' : (isJson ? 'Worker-ku wuu shaqeynayaa (JSON)' : 'Worker-ku wuxuu soo celiyaa HTML'),
+                timestamp: new Date().toISOString()
+            });
+        } catch (fetchError) {
+            const responseTime = Date.now() - startTime;
+            res.json({
+                status: 'offline',
+                worker_url: workerUrl,
+                response_time: responseTime + 'ms',
+                reachable: false,
+                error: fetchError.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
     }
 });
 
