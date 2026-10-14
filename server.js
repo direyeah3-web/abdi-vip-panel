@@ -674,16 +674,21 @@ if (bot) {
         const chatId = msg.chat.id;
         if (isAdmin(chatId)) {
             bot.sendMessage(chatId,
-                '👋 <b>Welcome Admin!</b>\n\n' +
+                '<b>╔══════════════════════════╗</b>\n' +
+                '<b>║   👋 WELCOME ADMIN   ║</b>\n' +
+                '<b>╚══════════════════════════╝</b>\n\n' +
                 '📋 <b>Commands-ka la heli karo:</b>\n\n' +
-                '/gen &lt;duration&gt; — Abuur license key\n' +
-                '   • 1d = 1 maalin\n' +
-                '   • 7d = 7 maalin\n' +
-                '   • 30d = 30 maalin\n' +
-                '   • 90d = 90 maalin\n' +
-                '   • 1y = 1 sano\n\n' +
-                '/stats — Xogta panel-ka\n' +
-                '/help — Caawimaad',
+                '<b>🔑 LICENSE GENERATOR:</b>\n' +
+                '<code>/gen 1d</code>  — 1 maalin\n' +
+                '<code>/gen 7d</code>  — 7 maalin\n' +
+                '<code>/gen 30d</code> — 30 maalin\n' +
+                '<code>/gen 90d</code> — 90 maalin\n' +
+                '<code>/gen 1y</code>  — 1 sano\n\n' +
+                '<b>📊 XOGTA:</b>\n' +
+                '<code>/stats</code> — Xogta panel-ka\n' +
+                '<code>/help</code>  — Caawimaad\n\n' +
+                '<b>━━━━━━━━━━━━━━━━━━━━━━</b>\n' +
+                '<b>🛡️ ABDI VIP PANEL</b>',
                 { parse_mode: 'HTML' }
             );
         } else {
@@ -755,10 +760,17 @@ if (bot) {
         const result = generateLicenseKey(duration);
         if (result) {
             bot.sendMessage(chatId,
-                '✅ <b>License Key la abuuray!</b>\n\n' +
-                '🔑 <code>' + result.key + '</code>\n' +
-                '⏱️ Duration: <b>' + result.duration + '</b>\n' +
-                '📅 Expires: <b>' + new Date(result.expires).toLocaleString() + '</b>',
+                '<b>╔══════════════════════════╗</b>\n' +
+                '<b>║   ✅ LICENSE KEY LA ABUURAY   ║</b>\n' +
+                '<b>╚══════════════════════════╝</b>\n\n' +
+                '🔑 <b>License Key:</b>\n' +
+                '<code>' + result.key + '</code>\n\n' +
+                '⏱️ <b>Duration:</b> ' + result.duration + '\n' +
+                '📅 <b>Expires:</b> ' + new Date(result.expires).toLocaleString() + '\n' +
+                '📊 <b>Status:</b> Available\n\n' +
+                '<i>👆 Taabo code-ka si aad u koobiyo</i>\n\n' +
+                '<b>━━━━━━━━━━━━━━━━━━━━━━</b>\n' +
+                '<b>🛡️ ABDI VIP PANEL</b>',
                 { parse_mode: 'HTML' }
             );
         } else {
