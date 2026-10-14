@@ -1,4 +1,7 @@
+require('dotenv').config();
 const express = require('express');
+const https = require('https');
+const TelegramBot = require('node-telegram-bot-api');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -10,6 +13,28 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET = 'abdi_vip_secret_2026';
 const DB_FILE = './abdi.db';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
+
+// Telegram Bot
+let bot = null;
+if (TELEGRAM_BOT_TOKEN) {
+    bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
+    console.log('🤖 Telegram Bot: la diyaariyay');
+} else {
+    console.log('⚠️  Telegram Bot: TOKEN ma jiro (.env)');
+}
+
+// Function: Ogeysiin admin-ka
+function sendTelegramNotification(message) {
+    if (!bot || !TELEGRAM_ADMIN_CHAT_ID) {
+        console.log('⚠️  Telegram: ma dirin (bot ama chat_id ma jiro)');
+        return;
+    }
+    bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
+        .then(() => console.log('✅ Telegram: notification la diray'))
+        .catch(err => console.error('❌ Telegram error:', err.message));
+}
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -584,6 +609,24 @@ app.get('/api/worker-check', async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
+    }
+});
+
+// Telegram — Test endpoint
+app.post('/api/telegram/test', auth, adminOnly, async (req, res) => {
+    try {
+        if (!bot) {
+            return res.status(400).json({ success: false, error: 'Bot ma jiro — .env hubi' });
+        }
+        if (!TELEGRAM_ADMIN_CHAT_ID) {
+            return res.status(400).json({ success: false, error: 'Chat ID ma jiro' });
+        }
+        const testMsg = '🧪 <b>Test Message</b>\n\n✅ Telegram Bot wuu shaqaynayaa!\n🕐 ' + new Date().toLocaleString();
+        await bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, testMsg, { parse_mode: 'HTML' });
+        res.json({ success: true, message: 'Test message la diray!' });
+    } catch (err) {
+        console.error('Telegram test error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
