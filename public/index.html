@@ -747,7 +747,15 @@ else if(p==='status'){
         document.getElementById('settings-new-pass').value = '';
         showToast('Success!', 'Password-ka waa la beddelay!', 'success');
     }}
-async function fetchStats(){try{var t=localStorage.getItem('token');var r=await fetch('/api/stats',{headers:{'Authorization':'Bearer '+t}});var d=await r.json();var g=document.getElementById('stats-grid');if(!g)return;g.innerHTML='<div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div><div class="stat-value">'+(d.totalUsers||0)+'</div><div class="stat-label">Total Users</div></div><div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-key"></i></div><div class="stat-value">'+(d.totalLicenses||0)+'</div><div class="stat-label">Total Licenses</div></div><div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-check-circle"></i></div><div class="stat-value">'+(d.unusedLicenses||0)+'</div><div class="stat-label">Available</div></div><div class="stat-card"><div class="stat-icon yellow"><i class="fa-solid fa-share-nodes"></i></div><div class="stat-value">'+(d.totalReferrals||0)+'</div><div class="stat-label">Referrals</div></div>';renderChart(d);}catch(e){console.error(e);}}
+async function fetchStats(){try{var t=localStorage.getItem('token');var r=await fetch('/api/stats',{headers:{'Authorization':'Bearer '+t}});var d=await r.json();var g=document.getElementById('stats-grid');if(!g)return;g.innerHTML='<div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div><div class="stat-value">'+(d.totalUsers||0)+'</div><div class="stat-label">Total Users</div></div><div class="panel" style="margin-top:20px;">
+<h3 style="margin-bottom:15px;font-size:16px;"><i class="fa-brands fa-telegram" style="color:#0088cc;margin-right:8px;"></i> Telegram Bot</h3>
+<div id="telegram-status-box" style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
+<span id="telegram-status-dot" style="width:12px;height:12px;border-radius:50%;background:#6b6b7e;display:inline-block;"></span>
+<span id="telegram-status-text" style="font-size:14px;color:var(--muted);">Loading...</span>
+</div>
+<div id="telegram-details" style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:15px;"></div>
+<button class="btn-primary" onclick="loadTelegramStatus()" style="width:100%;"><i class="fa-solid fa-rotate"></i> Refresh Status</button>
+</div><div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-key"></i></div><div class="stat-value">'+(d.totalLicenses||0)+'</div><div class="stat-label">Total Licenses</div></div><div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-check-circle"></i></div><div class="stat-value">'+(d.unusedLicenses||0)+'</div><div class="stat-label">Available</div></div><div class="stat-card"><div class="stat-icon yellow"><i class="fa-solid fa-share-nodes"></i></div><div class="stat-value">'+(d.totalReferrals||0)+'</div><div class="stat-label">Referrals</div></div>';renderChart(d);}catch(e){console.error(e);}}
 function renderChart(d){
     var c=document.getElementById('analyticsChart');
     if(c){
@@ -1269,7 +1277,37 @@ async function testWorkerConnection() {
         }
     })();
 
-    function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
+    async function loadTelegramStatus(){
+    var dot=document.getElementById('telegram-status-dot');
+    var txt=document.getElementById('telegram-status-text');
+    var det=document.getElementById('telegram-details');
+    if(!dot||!txt||!det)return;
+    dot.style.background='#f59e0b';
+    txt.textContent='Checking...';
+    det.innerHTML='';
+    try{
+        var t=localStorage.getItem('token');
+        var r=await fetch('/api/telegram/status',{headers:{'Authorization':'Bearer '+t}});
+        var d=await r.json();
+        if(d.success&&d.online){
+            dot.style.background='#10b981';
+            txt.textContent='Online';
+            txt.style.color='#10b981';
+            det.innerHTML='🤖 <b>Bot:</b> @'+(d.username||'N/A')+'<br>📡 <b>Status:</b> Connected<br>📊 <b>Mode:</b> '+(d.polling?'Polling':'Webhook')+'<br>🕐 <b>Checked:</b> '+new Date().toLocaleTimeString();
+        } else {
+            dot.style.background='#ef4444';
+            txt.textContent='Offline';
+            txt.style.color='#ef4444';
+            det.innerHTML='❌ <b>Bot:</b> '+(d.error||'Ma shaqeynayo');
+        }
+    }catch(e){
+        dot.style.background='#ef4444';
+        txt.textContent='Error';
+        txt.style.color='#ef4444';
+        det.innerHTML='❌ '+e.message;
+    }
+}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
 if(localStorage.getItem('token')){showDashboard();}
 </script>
 
