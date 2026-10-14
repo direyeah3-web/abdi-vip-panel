@@ -762,8 +762,7 @@ if (bot) {
             const keyboard = {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: '📋 COPY CODE', callback_data: 'copy_' + result.key }],
-                        [{ text: '📊 STATS', callback_data: 'stats' }]
+                        [{ text: '📋 COPY CODE', callback_data: 'copy_' + result.key }]
                     ]
                 }
             };
@@ -795,8 +794,7 @@ if (bot) {
         }
         if (data.startsWith('copy_')) {
             const key = data.replace('copy_', '');
-            bot.answerCallbackQuery(query.id, { text: '✅ Copied: ' + key, show_alert: false });
-            bot.sendMessage(chatId, '📋 <b>License Key:</b>\n<code>' + key + '</code>\n\n<i>Taabo code-ka si aad u koobiyo</i>', { parse_mode: 'HTML' });
+            bot.answerCallbackQuery(query.id, { text: '✅ ' + key + ' waa la koobiyay!', show_alert: false });
         } else if (data === 'stats') {
             try {
                 const users = queryOne('SELECT COUNT(*) as c FROM users');

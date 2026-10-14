@@ -759,6 +759,14 @@ if (bot) {
         }
         const result = generateLicenseKey(duration);
         if (result) {
+            const keyboard = {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '📋 COPY CODE', callback_data: 'copy_' + result.key }],
+                        [{ text: '📊 STATS', callback_data: 'stats' }]
+                    ]
+                }
+            };
             bot.sendMessage(chatId,
                 '<b>╔══════════════════════════╗</b>\n' +
                 '<b>║   ✅ LICENSE KEY LA ABUURAY   ║</b>\n' +
@@ -768,14 +776,46 @@ if (bot) {
                 '⏱️ <b>Duration:</b> ' + result.duration + '\n' +
                 '📅 <b>Expires:</b> ' + new Date(result.expires).toLocaleString() + '\n' +
                 '📊 <b>Status:</b> Available\n\n' +
-                '<i>👆 Taabo code-ka si aad u koobiyo</i>\n\n' +
                 '<b>━━━━━━━━━━━━━━━━━━━━━━</b>\n' +
                 '<b>🛡️ ABDI VIP PANEL</b>',
-                { parse_mode: 'HTML' }
+                Object.assign({ parse_mode: 'HTML' }, keyboard)
             );
         } else {
             bot.sendMessage(chatId, '❌ License abuurista waa guuldareysatay.');
         }
+    });
+
+    // Callback query handler (COPY CODE, STATS)
+    bot.on('callback_query', (query) => {
+        const chatId = query.message.chat.id;
+        const data = query.data;
+        if (!isAdmin(chatId)) {
+            bot.answerCallbackQuery(query.id, { text: '⛔ Kaliya admin-ka.' });
+            return;
+        }
+        if (data.startsWith('copy_')) {
+            const key = data.replace('copy_', '');
+            bot.answerCallbackQuery(query.id, { text: '✅ Copied: ' + key, show_alert: false });
+            bot.sendMessage(chatId, '📋 <b>License Key:</b>\n<code>' + key + '</code>\n\n<i>Taabo code-ka si aad u koobiyo</i>', { parse_mode: 'HTML' });
+        } else if (data === 'stats') {
+            try {
+                const users = queryOne('SELECT COUNT(*) as c FROM users');
+                const licenses = queryOne('SELECT COUNT(*) as c FROM licenses');
+                const available = queryOne("SELECT COUNT(*) as c FROM licenses WHERE status = 'available'");
+                const referrals = queryOne('SELECT COUNT(*) as c FROM referrals');
+                bot.sendMessage(chatId,
+                    '📊 <b>ABDI VIP PANEL — Stats</b>\n\n' +
+                    '👥 Users: <b>' + (users ? users.c : 0) + '</b>\n' +
+                    '🔑 Licenses: <b>' + (licenses ? licenses.c : 0) + '</b>\n' +
+                    '✅ Available: <b>' + (available ? available.c : 0) + '</b>\n' +
+                    '🎯 Referrals: <b>' + (referrals ? referrals.c : 0) + '</b>',
+                    { parse_mode: 'HTML' }
+                );
+            } catch (err) {
+                bot.sendMessage(chatId, '❌ Error: ' + err.message);
+            }
+        }
+        bot.answerCallbackQuery(query.id);
     });
 
     console.log('🤖 Telegram Bot: handlers la diyaariyay');
