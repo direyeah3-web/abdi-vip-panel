@@ -1,43 +1,41 @@
-import shutil
+# fix_default_dark.py - Dark Mode default ka dhig
 
-shutil.copy('public/index.html', 'public/index.html.backup')
+with open("public/index.html", "r") as f:
+    content = f.read()
 
-with open('public/index.html', 'r', encoding='utf-8') as f:
-    c = f.read()
+# ===== 1. KA SAAR AUTO-LOAD LIGHT THEME =====
+old_auto = """// Soo celi theme-ka la keydiyay marka boggu furmo
+    (function() {
+        var saved = localStorage.getItem('abdi_theme');
+        if (saved === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    })();"""
 
-# 1. Beddel localStorage keydinta — haddii 'light' uu keydsan yahay, tirtir
-#    Si default-ku Dark noqdo
-old_check = "if(localStorage.getItem('theme')==='light'){"
-if old_check in c:
-    c = c.replace(old_check, "if(false){", 1)
-    print("1. Light check: OK (default Dark)")
+new_auto = """// Soo celi theme-ka la keydiyay marka boggu furmo (default: Dark)
+    (function() {
+        var saved = localStorage.getItem('abdi_theme');
+        if (saved === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+    })();"""
+
+if old_auto in content:
+    content = content.replace(old_auto, new_auto)
+    print("✅ Auto-load theme waa la hagaajiyay (default: Dark)!")
 else:
-    print("1. Light check: LAMA HELIN")
+    print("⚠️ Auto-load lama helin — isku day qaab kale")
 
-# 2. Hubi — keydinta theme-ka oo dhan
-#    Waxaan raadinayaa localStorage.setItem('theme', ...) 
-import re
-count = len(re.findall(r"localStorage\.setItem\('theme'", c))
-print(f"2. localStorage.setItem('theme') meelaha: {count}")
-
-# 3. Haddii uu keydiyo 'light' — u beddel 'dark'
-old_save = "localStorage.setItem('theme','light')"
-if old_save in c:
-    c = c.replace(old_save, "localStorage.setItem('theme','dark')", 1)
-    print("3. Save light→dark: OK")
+# ===== 2. HUBI IN DARK THEME UU DEFAULT YAHOO =====
+# HTML-ka `<html>` waa inaan lahayn `data-theme="light"` si default uu u noqdo Dark
+if '<html lang="en" data-theme="light">' in content:
+    content = content.replace('<html lang="en" data-theme="light">', '<html lang="en">')
+    print("✅ HTML tag-ka waa la hagaajiyay (default: Dark)!")
 else:
-    print("3. Save light: LAMA HELIN")
+    print("ℹ️ HTML tag-ku wuu saxan yahay (ma lahayn data-theme)")
 
-old_save2 = 'localStorage.setItem("theme","light")'
-if old_save2 in c:
-    c = c.replace(old_save2, 'localStorage.setItem("theme","dark")', 1)
-    print("4. Save light→dark (double quotes): OK")
-else:
-    print("4. Save light (double): LAMA HELIN")
-
-# 4. Qor
-with open('public/index.html', 'w', encoding='utf-8') as f:
-    f.write(c)
-
-print("Backup: public/index.html.backup")
-print("Hadda panel-ka fur — Dark ayaa default noqon doona")
+with open("public/index.html", "w") as f:
+    f.write(content)
+print("✅ Faylka waa la keydiyay!")
