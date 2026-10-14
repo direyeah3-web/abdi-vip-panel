@@ -1269,7 +1269,37 @@ async function testWorkerConnection() {
         }
     })();
 
-    function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
+    async function loadTelegramStatus(){
+    var dot=document.getElementById('tg-dot');
+    var txt=document.getElementById('tg-text');
+    var info=document.getElementById('tg-info');
+    if(!dot||!txt||!info)return;
+    dot.style.background='#f59e0b';
+    txt.textContent='Checking...';
+    info.innerHTML='';
+    try{
+        var t=localStorage.getItem('token');
+        var r=await fetch('/api/telegram/status',{headers:{'Authorization':'Bearer '+t}});
+        var d=await r.json();
+        if(d.success&&d.online){
+            dot.style.background='#10b981';
+            txt.textContent='Online';
+            txt.style.color='#10b981';
+            info.innerHTML='🤖 <b>Bot:</b> @'+(d.username||'N/A')+'<br>📡 <b>Mode:</b> '+(d.polling?'Polling':'Webhook')+'<br>⏱️ <b>Uptime:</b> '+(d.uptime||0)+'s';
+        } else {
+            dot.style.background='#ef4444';
+            txt.textContent='Offline';
+            txt.style.color='#ef4444';
+            info.innerHTML='❌ '+(d.error||'Ma shaqeynayo');
+        }
+    }catch(e){
+        dot.style.background='#ef4444';
+        txt.textContent='Error';
+        txt.style.color='#ef4444';
+        info.innerHTML='❌ '+e.message;
+    }
+}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user');location.reload();}
 if(localStorage.getItem('token')){showDashboard();}
 </script>
 
