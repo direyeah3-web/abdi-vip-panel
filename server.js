@@ -1474,26 +1474,53 @@ app.post('/api/ai/chat', auth, async (req, res) => {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) return res.status(400).json({ success: false, error: 'GEMINI_API_KEY ma jiro' });
 
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            generationConfig: {
-                maxOutputTokens: 500,
-                temperature: 0.9,
-                topP: 0.95
-            },
-            model: 'gemini-3.8-flash',
-            systemInstruction: "Waxaad tahay ABDI VIP PANEL AI Assistant — kaaliye caqli badan oo ChatGPT/DeepSeek u eg. Waxaad ku hadashaa Soomaali iyo Ingiriisi si cad oo faa'iido leh. Waxaad ka jawaabtaa su'aalo kala duwan: code (JavaScript, Python, Node.js), business (panel management, license generation), general knowledge (science, history, math, geography), writing (essays, emails, translations), analysis (data, statistics). Marka user-ku su'aal weydiiyo oo ku saabsan panel-ka, isticmaal xogta panel-ka (users, licenses, referrals) si aad u bixiso jawaab sax ah. Jawaabaha waa in ay cad yihiin, oo faa'iido leh. Ha bixin talooyin sharci-darro ah (weapons, drugs, hacking, illegal activities). Haddii su'aashu sharci-darro tahay, si taxadar leh u diid oo soo jeedi beddel sharci ah." 
-        });
 
-        const chat = model.startChat({
-            history: (history || []).map(h => ({
-                role: h.role === 'user' ? 'user' : 'model',
-                parts: [{ text: h.text }]
-            }))
-        });
+        const systemPrompt = "Waxaad tahay ABDI VIP PANEL AI Assistant — ChatGPT/DeepSeek u eg. Waxaad ku hadashaa Soomaali iyo Ingiriisi. Jawaabahaagu waa in ay cad yihiin, buuxa yihiin, oo faa'iido leh — laakiin DEGDEG ah. Qoraalka waa in uu gaaban yahay, laakiin macne buuxa. Isticmaal emoji-ga si dabiici ah (😊🔥💯✨🚀💻👍). Su'aalaha code-ka, business-ka, general knowledge — dhammaan ka jawaab. Haddii user-ku su'aal weydiiyo oo panel-ka ku saabsan, isticmaal xogta panel-ka. Ka fogow buuq. Haddii su'aashu sharci-darro tahay, si fudud u diid oo soo jeedi beddel sharci ah.";
 
-        const result = await chat.sendMessage(message);
-        const response = result.response.text();
+        // Fallback models — isku day mid kasta
+        const models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+        let lastError = null;
+        let response = null;
+
+        for (const modelName of models) {
+            try {
+                const model = genAI.getGenerativeModel({
+                    model: modelName,
+                    systemInstruction: systemPrompt,
+                    generationConfig: {
+                        maxOutputTokens: 2048,
+                        temperature: 0.7,
+                        topP: 0.95
+                    }
+                });
+
+                const chat = model.startChat({
+                    history: (history || []).map(h => ({
+                        role: h.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: h.text }]
+                    }))
+                });
+
+                const result = await chat.sendMessage(message);
+                response = result.response.text();
+                console.log('✅ AI model:', modelName);
+                break;
+            } catch (err) {
+                lastError = err;
+                console.log('❌ Model', modelName, 'failed:', err.message.substring(0, 80));
+                // Haddii 503, isku day model kale
+                continue;
+            }
+        }
+
+        if (!response) {
+            return res.status(503).json({
+                success: false,
+                error: 'AI server-ka mashquul. Fadlan 10 daqiiqo kadib dib u tijaabi. 😭'
+            });
+        }
 
         res.json({ success: true, response: response });
     } catch (err) {
