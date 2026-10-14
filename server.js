@@ -1005,6 +1005,27 @@ app.get('/api/worker/status', auth, adminOnly, async (req, res) => {
 
 // ===== APK ANALYZER ENDPOINTS =====
 const AdmZip = require('adm-zip');
+
+// Parse AndroidManifest.xml (binary XML)
+function parseManifest(buf) {
+    const result = { package_name: null, launcher: null, application: null, permissions: [] };
+    try {
+        const str = buf.toString('latin1');
+        // Package name: usually near "package" attribute
+        const pkgMatch = str.match(/(com\.[a-z0-9_]+\.[a-z0-9_.]+)/i);
+        if (pkgMatch) result.package_name = pkgMatch[1];
+        // Launcher activity: contains "android.intent.action.MAIN" + "LAUNCHER"
+        const actMatches = str.match(/([A-Z][a-zA-Z0-9_]*(?:Activity|MainActivity))/g);
+        if (actMatches) result.launcher = actMatches[actMatches.length - 1];
+        // Application class
+        const appMatches = str.match(/([A-Z][a-zA-Z0-9_]*Application)/g);
+        if (appMatches) result.application = appMatches[appMatches.length - 1];
+        // Permissions
+        const permMatches = str.match(/android\.permission\.[A-Z_]+/g) || [];
+        result.permissions = [...new Set(permMatches)];
+    } catch (e) {}
+    return result;
+}
 const crypto = require('crypto');
 
 // POST /api/apk/upload — APK soo geli (base64)
@@ -1084,17 +1105,11 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
         if (fs.existsSync(manifestPath)) {
             try {
                 const buf = fs.readFileSync(manifestPath);
-                // Binary XML — baadh strings
-                const str = buf.toString('latin1');
-                // Package name
-                const pkgMatch = str.match(/com\.[a-z0-9]+\.[a-z0-9_.]+/i);
-                if (pkgMatch) result.package_name = pkgMatch[0];
-                // Launcher
-                const launcherMatch = str.match(/([A-Z][a-zA-Z0-9_]+Activity)/);
-                if (launcherMatch) result.launcher_activity = launcherMatch[0];
-                // Application
-                const appMatch = str.match(/([A-Z][a-zA-Z0-9_]+Application)/);
-                if (appMatch) result.application_class = appMatch[0];
+                const manifest = parseManifest(buf);
+                result.package_name = manifest.package_name || 'N/A';
+                result.launcher_activity = manifest.launcher || 'N/A';
+                result.application_class = manifest.application || 'N/A';
+                result.permissions = manifest.permissions || [];
             } catch (e) {}
         }
 
