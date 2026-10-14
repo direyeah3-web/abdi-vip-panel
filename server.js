@@ -1036,163 +1036,197 @@ app.post('/api/apk/upload', auth, adminOnly, async (req, res) => {
 app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
     try {
         const { apkPath, filename } = req.body;
-        if (!apkPath) {
-            return res.status(400).json({ success: false, error: 'apkPath waa loo baahan yahay' });
-        }
+        if (!apkPath) return res.status(400).json({ success: false, error: 'apkPath waa loo baahan yahay' });
         const fs = require('fs');
-        if (!fs.existsSync(apkPath)) {
-            return res.status(400).json({ success: false, error: 'APK ma jiro: ' + apkPath });
-        }
+        const { execSync } = require('child_process');
+        if (!fs.existsSync(apkPath)) return res.status(400).json({ success: false, error: 'APK ma jiro' });
 
         const zip = new AdmZip(apkPath);
         const entries = zip.getEntries();
+        const tmpDir = '/tmp/apk_extract_' + Date.now();
+        fs.mkdirSync(tmpDir, { recursive: true });
 
-        // ===== 1. URLs (file -> line -> url) =====
-        const urlsList = [];
-        const smaliFiles = [];
-        const nativeLibs = [];
-        const dexFiles = [];
-
-        // ===== 2. License/auth/verification routine =====
-        const licenseRoutines = [];
-        const signatureChecks = [];
-        const integrityChecks = [];
-        const startupCalls = [];
-
-        const urlRegex = /https?:\/\/[^\s"']+/g;
-        const licKeywords = ['license', 'verify', 'auth', 'activation', 'validate', 'checkLicense', 'checkKey', 'Premium', 'vip'];
-        const sigKeywords = ['getPackageInfo', 'GET_SIGNATURES', 'MessageDigest', 'PackageManager', 'signature', 'Signature', 'certificate', 'CERT', 'SHA-1', 'SHA1', 'MD5', 'CRC'];
-        const integKeywords = ['SafetyNet', 'PlayIntegrity', 'attest', 'rootBeer', 'RootBeer', 'isRooted', 'emulator', 'isEmulator', 'debugger', 'isDebuggerConnected', 'isDebug', 'tamper', 'Tamper', 'Integrity'];
-        const startupKeywords = ['onCreate', 'Application', 'attachBaseContext', '<init>', 'onStart', 'LauncherActivity'];
-
-        // Track file name
-        const getName = (e) => e.entryName;
-
+        // Soo qaado dhammaan entries
         for (const entry of entries) {
-            const name = entry.entryName;
-
-            // Smali files
-            if (name.endsWith('.smali')) {
-                smaliFiles.push(name);
-                let content = '';
-                try {
-                    const buf = entry.getData();
-                    content = buf.toString('utf8');
-                } catch (err) {
-                    try { content = entry.getData().toString('latin1'); } catch (e) {}
-                }
-
-                const lines = content.split('\n');
-
-                // URLs with line numbers
-                lines.forEach((line, idx) => {
-                    const matches = line.match(urlRegex);
-                    if (matches) {
-                        matches.forEach(u => {
-                            urlsList.push({ file: name, line: idx + 1, url: u });
-                        });
-                    }
-                });
-
-                // License routines
-                const lowerName = name.toLowerCase();
-                const lowerContent = content.toLowerCase();
-                let licMatch = licKeywords.some(k => lowerName.includes(k.toLowerCase()) || lowerContent.includes(k.toLowerCase()));
-                if (licMatch) {
-                    // Soo qaado class name iyo method
-                    const classMatch = content.match(/\.class[^\n]*/);
-                    const methodMatch = content.match(/\.method[^\n]*/);
-                    lines.forEach((line, idx) => {
-                        if (licKeywords.some(k => line.toLowerCase().includes(k.toLowerCase()))) {
-                            licenseRoutines.push({
-                                file: name,
-                                line: idx + 1,
-                                class_name: classMatch ? classMatch[0] : 'N/A',
-                                method_name: methodMatch ? methodMatch[0] : 'N/A',
-                                smali_line: line.trim().substring(0, 200)
-                            });
-                        }
-                    });
-                }
-
-                // Signature checks
-                lines.forEach((line, idx) => {
-                    if (sigKeywords.some(k => line.includes(k))) {
-                        signatureChecks.push({
-                            file: name,
-                            line: idx + 1,
-                            match: line.trim().substring(0, 200)
-                        });
-                    }
-                });
-
-                // Integrity checks
-                lines.forEach((line, idx) => {
-                    if (integKeywords.some(k => line.includes(k))) {
-                        integrityChecks.push({
-                            file: name,
-                            line: idx + 1,
-                            match: line.trim().substring(0, 200)
-                        });
-                    }
-                });
-
-                // Startup calls
-                lines.forEach((line, idx) => {
-                    if (startupKeywords.some(k => line.includes(k)) && urlRegex.test(line)) {
-                        startupCalls.push({
-                            file: name,
-                            line: idx + 1,
-                            method: line.trim().substring(0, 200)
-                        });
-                    }
-                });
-            }
-
-            // Native libs
-            if (name.startsWith('lib/') && (name.endsWith('.so') || name.endsWith('.a'))) {
-                nativeLibs.push(name);
-                try {
-                    const buf = entry.getData();
-                    const str = buf.toString('latin1');
-                    const matches = str.match(urlRegex) || [];
-                    matches.forEach(u => {
-                        urlsList.push({ file: name, line: 0, url: u });
-                    });
-                    // License key strings
-                    const licStrings = str.match(/ABDI-[A-Z0-9-]+/g) || [];
-                    licStrings.forEach(l => {
-                        licenseRoutines.push({ file: name, line: 0, match: l });
-                    });
-                } catch (e) {}
-            }
-
-            // DEX files
-            if (name.endsWith('.dex')) {
-                dexFiles.push(name);
+            const target = tmpDir + '/' + entry.entryName;
+            if (!entry.isDirectory) {
+                const dir = require('path').dirname(target);
+                fs.mkdirSync(dir, { recursive: true });
+                fs.writeFileSync(target, entry.getData());
             }
         }
 
-        // Database licenses
-        const dbLicenses = queryAll('SELECT license_key FROM licenses LIMIT 200') || [];
-        const allLicenses = dbLicenses.map(l => l.license_key);
+        const result = {
+            // 1. APK identification
+            package_name: 'N/A',
+            launcher_activity: 'N/A',
+            application_class: 'N/A',
+            dex_files: [],
+            native_libs: [],
+            assets: [],
+            // 2. License check
+            license_routines: [],
+            // 3. URLs
+            urls: [],
+            // 4. Signature verification
+            signature_checks: [],
+            // 5. Integrity / anti-tamper
+            integrity_checks: [],
+            // 6. Native methods (JNI)
+            native_methods: [],
+            jni_exports: [],
+            // 7. Hermes bytecode
+            hermes: null
+        };
 
-        res.json({
-            success: true,
-            filename: filename,
-            total_entries: entries.length,
-            smali_files_count: smaliFiles.length,
-            native_libs_count: nativeLibs.length,
-            dex_files_count: dexFiles.length,
-            urls: urlsList,
-            license_routines: licenseRoutines.slice(0, 100),
-            signature_checks: signatureChecks.slice(0, 100),
-            integrity_checks: integrityChecks.slice(0, 100),
-            startup_calls: startupCalls.slice(0, 50),
-            db_licenses: allLicenses,
-            urls_count: urlsList.length,
-            licenses_count: licenseRoutines.length
-        });
+        // ===== 1. APK identification (AndroidManifest.xml) =====
+        const manifestPath = tmpDir + '/AndroidManifest.xml';
+        if (fs.existsSync(manifestPath)) {
+            try {
+                const buf = fs.readFileSync(manifestPath);
+                // Binary XML — baadh strings
+                const str = buf.toString('latin1');
+                // Package name
+                const pkgMatch = str.match(/com\.[a-z0-9]+\.[a-z0-9_.]+/i);
+                if (pkgMatch) result.package_name = pkgMatch[0];
+                // Launcher
+                const launcherMatch = str.match(/([A-Z][a-zA-Z0-9_]+Activity)/);
+                if (launcherMatch) result.launcher_activity = launcherMatch[0];
+                // Application
+                const appMatch = str.match(/([A-Z][a-zA-Z0-9_]+Application)/);
+                if (appMatch) result.application_class = appMatch[0];
+            } catch (e) {}
+        }
+
+        // ===== DEX files =====
+        const dexList = entries.filter(e => e.entryName.match(/^classes[0-9]*\.dex$/)).map(e => e.entryName);
+        result.dex_files = dexList;
+
+        // ===== Native libs =====
+        const nativeList = entries.filter(e => e.entryName.match(/^lib\/.*\.so$/)).map(e => e.entryName);
+        result.native_libs = nativeList;
+
+        // ===== Assets =====
+        const assetList = entries.filter(e => e.entryName.startsWith('assets/') && !e.isDirectory).map(e => e.entryName);
+        result.assets = assetList;
+
+        // ===== 2-6. DEX analysis =====
+        const licenseKw = ['LicenseManager', 'AuthManager', 'PanelLicense', 'LoginActivity', 'LoginModule', 'activateSdk', 'MetaActivationManager', 'BuildSeal', 'validateLicense', 'nativeValidateLicense', 'checkLicense', 'statusTrue', 'isValid', 'is_valid', 'performLogin'];
+        const urlRegex = /https?:\/\/[^\x00-\x20"']+/g;
+        const sigKw = ['getPackageInfo', 'GET_SIGNATURES', 'GET_SIGNING_CERTIFICATES', 'Signature', 'MessageDigest', 'SHA-256', 'SHA-1', 'X509Certificate', 'certSha256', 'OFFICIAL_CERT', 'expectedHash'];
+        const integKw = ['SafetyNet', 'PlayIntegrity', 'IntegrityToken', 'Frida', 'frida', 'ptrace', 'TracerPid', 'Magisk', 'zygisk', 'Xposed', 'Substrate', 'ro.debuggable', 'ro.kernel.qemu', 'goldfish', 'ranchu', 'qemu_pipe', 'test-keys'];
+        const nativeKw = ['native ', 'nativeValidate', 'nativeEnsure'];
+
+        for (const entry of entries) {
+            const name = entry.entryName;
+            if (!name.endsWith('.dex')) continue;
+
+            try {
+                const buf = entry.getData();
+                const str = buf.toString('latin1');
+                const lines = str.split('\n');
+
+                // URLs
+                const urlMatches = str.match(urlRegex) || [];
+                urlMatches.forEach(u => result.urls.push({ file: name, line: 0, url: u }));
+
+                // License routines
+                lines.forEach((line, idx) => {
+                    if (licenseKw.some(k => line.includes(k))) {
+                        result.license_routines.push({ file: name, line: idx + 1, match: line.trim().substring(0, 200) });
+                    }
+                });
+
+                // Signature
+                lines.forEach((line, idx) => {
+                    if (sigKw.some(k => line.includes(k))) {
+                        result.signature_checks.push({ file: name, line: idx + 1, match: line.trim().substring(0, 200) });
+                    }
+                });
+
+                // Integrity
+                lines.forEach((line, idx) => {
+                    if (integKw.some(k => line.includes(k))) {
+                        result.integrity_checks.push({ file: name, line: idx + 1, match: line.trim().substring(0, 200) });
+                    }
+                });
+
+                // Native methods
+                lines.forEach((line, idx) => {
+                    if (nativeKw.some(k => line.includes(k))) {
+                        result.native_methods.push({ file: name, line: idx + 1, match: line.trim().substring(0, 200) });
+                    }
+                });
+            } catch (e) {}
+        }
+
+        // ===== 3. URLs in assets =====
+        for (const entry of entries) {
+            if (!entry.entryName.startsWith('assets/')) continue;
+            try {
+                const buf = entry.getData();
+                const str = buf.toString('latin1');
+                const urlMatches = str.match(urlRegex) || [];
+                urlMatches.forEach(u => result.urls.push({ file: entry.entryName, line: 0, url: u }));
+            } catch (e) {}
+        }
+
+        // ===== 4-5. Signature + Integrity in native libs =====
+        for (const entry of entries) {
+            if (!entry.entryName.startsWith('lib/') || !entry.entryName.endsWith('.so')) continue;
+            try {
+                const buf = entry.getData();
+                const str = buf.toString('latin1');
+                const urlMatches = str.match(urlRegex) || [];
+                urlMatches.forEach(u => result.urls.push({ file: entry.entryName, line: 0, url: u }));
+
+                // JNI exports
+                const jniMatches = str.match(/Java_[a-zA-Z0-9_]+/g) || [];
+                jniMatches.forEach(j => result.jni_exports.push({ file: entry.entryName, symbol: j }));
+
+                // Integrity in native
+                sigKw.concat(integKw).forEach(kw => {
+                    if (str.includes(kw)) {
+                        result.signature_checks.push({ file: entry.entryName, line: 0, match: 'native: ' + kw });
+                    }
+                });
+            } catch (e) {}
+        }
+
+        // ===== 7. Hermes bytecode =====
+        const bundlePath = tmpDir + '/assets/index.android.bundle';
+        if (fs.existsSync(bundlePath)) {
+            try {
+                const buf = fs.readFileSync(bundlePath);
+                const magic = buf.slice(0, 8).toString('hex');
+                const version = buf.readUInt32LE(8);
+                const str = buf.toString('latin1');
+                const urlMatches = str.match(urlRegex) || [];
+                urlMatches.forEach(u => result.urls.push({ file: 'assets/index.android.bundle', line: 0, url: u }));
+                const licMatches = str.match(/(validateLicense|license|LicenseManager|isValid|statusTrue)/g) || [];
+                result.hermes = {
+                    magic: magic,
+                    version: version,
+                    size: buf.length,
+                    license_hits: [...new Set(licMatches)]
+                };
+            } catch (e) {}
+        }
+
+        // Clean up
+        try { execSync('rm -rf ' + tmpDir); } catch (e) {}
+
+        // Counts
+        result.urls_count = result.urls.length;
+        result.license_count = result.license_routines.length;
+        result.signature_count = result.signature_checks.length;
+        result.integrity_count = result.integrity_checks.length;
+        result.native_count = result.native_methods.length;
+        result.jni_count = result.jni_exports.length;
+        result.filename = filename;
+        result.success = true;
+
+        res.json(result);
     } catch (err) {
         console.error('APK analyze error:', err);
         res.status(500).json({ success: false, error: err.message });
