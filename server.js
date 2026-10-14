@@ -930,20 +930,16 @@ app.post('/api/worker/code', auth, adminOnly, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Code ma jiro' });
         }
         const url = CF_API + '/accounts/' + accountId + '/workers/scripts/' + workerName;
-        // Isticmaal FormData (multipart) — Cloudflare API waa in uu helaa metadata + worker.js
-        const FormData = require('form-data');
+        // Native FormData (Node 18+) — multipart/form-data
         const form = new FormData();
-        form.append('metadata', JSON.stringify({
+        form.append('metadata', new Blob([JSON.stringify({
             main_module: 'worker.js',
             compatibility_date: '2024-01-01'
-        }), { contentType: 'application/json' });
-        form.append('worker.js', code, {
-            filename: 'worker.js',
-            contentType: 'application/javascript+module'
-        });
+        })], { type: 'application/json' }), 'metadata.json');
+        form.append('worker.js', new Blob([code], { type: 'application/javascript+module' }), 'worker.js');
         const r = await fetch(url, {
             method: 'PUT',
-            headers: Object.assign({ 'Authorization': 'Bearer ' + token }, form.getHeaders()),
+            headers: { 'Authorization': 'Bearer ' + token },
             body: form
         });
         const data = await r.json();
