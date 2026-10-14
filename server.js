@@ -1477,7 +1477,7 @@ app.post('/api/ai/chat', auth, async (req, res) => {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
             model: 'gemini-1.5-flash',
-            systemInstruction: 'Waxaad tahay ABDI VIP PANEL Assistant — kaaliye caqli badan oo ku hadla Soomaali iyo Ingiriisi. Waxaad ka caawinaysaa users-ka panel-ka: license, referrals, dashboard, iwm. Jawaabaha waa in ay gaaban yihiin, cad yihiin, oo faa'iido leh. Ha bixin talooyin sharci-darro ah.'
+            systemInstruction: "Waxaad tahay ABDI VIP PANEL Assistant — kaaliye caqli badan oo ku hadla Soomaali iyo Ingiriisi. Waxaad ka caawinaysaa users-ka panel-ka: license, referrals, dashboard, iwm. Jawaabaha waa in ay gaaban yihiin, cad yihiin, oo faa'iido leh. Ha bixin talooyin sharci-darro ah." 
         });
 
         const chat = model.startChat({
