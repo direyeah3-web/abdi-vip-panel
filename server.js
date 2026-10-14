@@ -1302,65 +1302,114 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
 app.post('/api/loader/helper', auth, adminOnly, async (req, res) => {
     try {
         const { analysis, serverUrl } = req.body;
-        if (!analysis) {
-            return res.status(400).json({ success: false, error: 'analysis waa loo baahan yahay' });
-        }
+        if (!analysis) return res.status(400).json({ success: false, error: 'analysis waa loo baahan yahay' });
 
         const helper = {
             server_location: 'unknown',
+            server_url_real: null,
+            server_source: null,
             patch_method: 'unknown',
+            patch_steps: [],
             license_flow: [],
             response_format: null,
             code_snippet: null,
             worker_template: null,
-            steps: []
+            url_locations: []
         };
 
         const urls = analysis.urls || [];
         const nativeLibs = analysis.native_libs || [];
         const dexFiles = analysis.dex_files || [];
 
-        // 1. Server location — DEX vs Native
-        const dexUrls = urls.filter(u => u.file && u.file.endsWith('.dex') && u.url && u.url.startsWith('http'));
-        const nativeUrls = urls.filter(u => u.file && u.file.includes('lib/') && u.url && u.url.startsWith('http') && !u.url.includes('%s'));
+        // 1. Raadi URL-ka dhabta ah — DEX miyaa mise native
+        const ignoreHosts = ['schemas.android.com', 'crbug.com', 'google.com', 'googleapis.com', 'github.com', 'shizuku.rikka.app', 'curl.se', 'llvm.org', 'DeNA', 'play.google.com'];
 
+        // DEX URLs
+        const dexUrls = urls.filter(u => {
+            if (!u.file || !u.file.endsWith('.dex')) return false;
+            if (!u.url || !u.url.startsWith('http')) return false;
+            if (u.url.includes('%s') || u.url.includes('%d')) return false;
+            if (ignoreHosts.some(h => u.url.includes(h))) return false;
+            return true;
+        });
+
+        // Native URLs
+        const nativeUrls = urls.filter(u => {
+            if (!u.file || !u.file.includes('lib/')) return false;
+            if (!u.url || !u.url.startsWith('http')) return false;
+            if (u.url.includes('%s') || u.url.includes('%d')) return false;
+            if (ignoreHosts.some(h => u.url.includes(h))) return false;
+            return true;
+        });
+
+        // 2. Go'aanso location + URL-ka dhabta ah
         if (dexUrls.length > 0) {
             helper.server_location = 'dex';
+            helper.server_url_real = dexUrls[0].url;
+            helper.server_source = dexUrls[0].file + ' : L' + dexUrls[0].line;
             helper.patch_method = 'smali / DEX editor (NP Manager, MT Manager)';
+            helper.patch_steps = [
+                'NP Manager fur → APK fur → DEX Editor',
+                'Raadi: ' + dexUrls[0].url,
+                'Beddel: ' + (serverUrl || dexUrls[0].url),
+                'Save → Sign APK'
+            ];
         } else if (nativeUrls.length > 0) {
             helper.server_location = 'native';
-            helper.patch_method = 'IDA Pro 7.7 + hex patch / Ghidra';
+            helper.server_url_real = nativeUrls[0].url;
+            helper.server_source = nativeUrls[0].file + ' : L' + nativeUrls[0].line;
+            helper.patch_method = 'IDA Pro 7.7 + hex patch';
+            helper.patch_steps = [
+                'IDA Pro 7.7 fur → ' + nativeUrls[0].file,
+                'Raadi string: ' + nativeUrls[0].url,
+                'Beddel URL-ka (hex patch)',
+                'Save → APK repack'
+            ];
         } else {
             helper.server_location = 'unknown';
-            helper.patch_method = 'Baadh APK-ga si qoto dheer';
+            helper.patch_method = 'Baadh APK-ga dheeraad — NP Manager + IDA Pro';
+            helper.patch_steps = ['APK-ga baadh dheeraad', 'Hubi DEX + native libs'];
         }
 
-        // 2. License flow — sida loo sameeyo
-        helper.license_flow = [
-            '1. Panel-ka: Generate License → hel license key (ABDI-XXXX)',
-            '2. Loader-ka: User-ku geliyaa license key',
-            '3. Loader-ku: Wuxuu u diraa server-kaaga (' + (serverUrl || 'a.dirxx.workers.dev') + ')',
-            '4. Server-ka: Wuxuu hubinayaa license-ka database-ka',
-            '5. Server-ka: Wuxuu soo celiyaa JSON response',
-            '6. Loader-ku: Wuxuu akhriyaa response-ka → login/deny'
-        ];
+        // 3. URL locations — dhammaan meelaha
+        helper.url_locations = urls.filter(u => u.url && u.url.startsWith('http') && !ignoreHosts.some(h => u.url.includes(h))).map(u => ({
+            file: u.file,
+            line: u.line,
+            url: u.url
+        }));
 
-        // 3. Response format — qaabka loader-ku aqbalo
+        // 4. License flow — DYNAMIC (ka soo qaado APK-ga)
+        const licenseRoutines = analysis.license_routines || [];
+        helper.license_flow = [
+            '1. Panel-ka → Licenses → Generate License',
+            '2. Loader-ka → Key geli → ' + (helper.server_url_real || serverUrl || 'N/A'),
+            '3. Loader-ku server-ka wacayaa: ' + (helper.server_location === 'dex' ? 'DEX' : helper.server_location === 'native' ? 'Native (JNI)' : 'Unknown'),
+            '4. Server-ka → Database hubin (license_key)',
+            '5. Server-ka → JSON response',
+            '6. Loader-ku → response akhriyaa → login/deny'
+        ];
+        if (licenseRoutines.length > 0) {
+            helper.license_flow.push('License methods la helay: ' + licenseRoutines.slice(0, 3).map(l => l.file + ' L' + l.line).join(', '));
+        }
+
+        // 5. Response format — DYNAMIC (ka soo qaado APK analysis)
+        const dexStrings = analysis.dex_strings || {};
+        // Haddii aan la helin dex_strings, isticmaal APK-ga signature checks si loo ogaado fields
+        const responseFields = [];
+        if (dexStrings.fields && dexStrings.fields.length > 0) {
+            dexStrings.fields.forEach(f => responseFields.push(f));
+        } else {
+            // Default fields (kuwa caadiga ah ee loader-ka)
+            responseFields.push('status', 'success', 'data', 'reason', 'EXP', 'expired_date');
+        }
+
         helper.response_format = {
             valid: {
                 status: true,
                 success: true,
                 data: {
-                    EXP: '2026-11-01',
-                    expired_date: '2026-11-01',
-                    appVersion: '4.6.0',
-                    firebase_database_url: 'https://abdi-vip-panel-default-rtdb.firebaseio.com',
-                    GAME_LIST_ICON: ['pubg_global.png'],
-                    GAME_LIST_PKG: ['com.tencent.ig'],
-                    STATUS_BY: 'Latest Version',
-                    USER_ID: 'user_id',
-                    game_list: 'game_list',
-                    games: 'games'
+                    EXP: 'YYYY-MM-DD',
+                    expired_date: 'YYYY-MM-DD'
                 }
             },
             invalid: {
@@ -1372,16 +1421,18 @@ app.post('/api/loader/helper', auth, adminOnly, async (req, res) => {
             expired: {
                 status: false,
                 success: false,
-                data: { EXP: '2026-11-01' },
+                data: { EXP: 'YYYY-MM-DD' },
                 reason: 'FAILED'
-            }
+            },
+            fields_detected: responseFields
         };
 
-        // 4. Code snippet — loader-ka login
+        // 6. Code snippet — DYNAMIC (server URL-ka dhabta ah)
+        const realServer = helper.server_url_real || serverUrl || 'https://a.dirxx.workers.dev';
         helper.code_snippet = '// Loader-ka login code\n' +
-            'const SERVER = "' + (serverUrl || 'https://a.dirxx.workers.dev') + '";\n' +
+            'const SERVER = "' + realServer + '";\n' +
             'const KEY = userInputKey;\n' +
-            'const res = await fetch(SERVER + "/connect", {\n' +
+            'const res = await fetch(SERVER, {\n' +
             '  method: "POST",\n' +
             '  headers: { "Content-Type": "application/json" },\n' +
             '  body: JSON.stringify({ user_key: KEY, serial: deviceId, game: "pubg" })\n' +
@@ -1393,10 +1444,9 @@ app.post('/api/loader/helper', auth, adminOnly, async (req, res) => {
             '  // LOGIN FAILED — data.reason\n' +
             '}';
 
-        // 5. Worker template — haddii loo baahdo
+        // 7. Worker template
         helper.worker_template = 'export default {\n' +
             '  async fetch(request, env, ctx) {\n' +
-            '    // Proxy to Railway\n' +
             '    const url = new URL(request.url);\n' +
             '    const target = "https://abdi-vip-panel-production.up.railway.app" + url.pathname;\n' +
             '    return fetch(target, {\n' +
@@ -1406,18 +1456,6 @@ app.post('/api/loader/helper', auth, adminOnly, async (req, res) => {
             '    });\n' +
             '  }\n' +
             '};';
-
-        // 6. Steps — tallaabooyinka
-        helper.steps = [
-            '1. Panel-ka → APK Analyzer → APK soo geli',
-            '2. Hubi qaybta ESSENTIAL INFO — Server URL-ka saxda ah',
-            '3. ' + (helper.server_location === 'dex' ? 'NP Manager → DEX Editor → Beddel URL-ka' : helper.server_location === 'native' ? 'IDA Pro 7.7 → hex patch → Beddel URL-ka' : 'Baadh APK-ga dheeraad'),
-            '4. Panel-ka → Licenses → Generate License (duration dooro)',
-            '5. License key-ga koobi',
-            '6. Loader-ka → Key geli → LOGIN',
-            '7. Loader-ku server-kaaga wuu wacayaa → response-ka hubi',
-            '8. Haddii khalad — Cloudflare Worker template beddel'
-        ];
 
         res.json({ success: true, helper: helper });
     } catch (err) {
