@@ -581,7 +581,6 @@ html, body {
 <a class="nav-item" onclick="loadPage('referrals',this)"><i class="fa-solid fa-share-nodes"></i> <span>Referrals</span></a>
 <div class="nav-section">System</div>
 <a class="nav-item" onclick="loadPage('status',this)"><i class="fa-solid fa-signal"></i> <span>System Status</span></a>
-        <a class="nav-item" onclick="loadPage('telegram',this)"><i class="fa-brands fa-telegram" style="color:#0088cc;"></i> <span>Telegram Bot</span></a>
 <a class="nav-item" onclick="loadPage('settings',this)"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
 <a class="nav-item" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span></a>
 </nav>
@@ -775,25 +774,6 @@ function renderChart(d){
         }
     }
 }
-        else if(p==='telegram'){
-            c.innerHTML='<div class="panel-header" style="margin-bottom:20px;"><h1 style="font-size:24px;font-weight:800;">Telegram Bot</h1><button class="btn-secondary" onclick="loadPage(\'telegram\')"><i class="fa-solid fa-refresh"></i> Refresh</button></div>'+
-            '<div class="stats-grid" id="tg-stats-grid">'+
-                '<div class="stat-card"><div class="stat-icon blue"><i class="fa-brands fa-telegram"></i></div><div class="stat-value" id="tg-page-status">...</div><div class="stat-label">Bot Status</div></div>'+
-                '<div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-robot"></i></div><div class="stat-value" id="tg-page-username" style="font-size:14px;">...</div><div class="stat-label">Bot Username</div></div>'+
-                '<div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-clock"></i></div><div class="stat-value" id="tg-page-uptime">...</div><div class="stat-label">Uptime</div></div>'+
-                '<div class="stat-card"><div class="stat-icon yellow"><i class="fa-solid fa-comment"></i></div><div class="stat-value" id="tg-page-mode">...</div><div class="stat-label">Mode</div></div>'+
-            '</div>'+
-            '<div class="content-grid" style="margin-top:20px;">'+
-                '<div class="panel"><div class="panel-header"><h3>Bot Details</h3></div><div id="tg-page-details">Loading...</div></div>'+
-                '<div class="panel"><div class="panel-header"><h3>Bot Info</h3></div><div id="tg-page-info">Loading...</div></div>'+
-            '</div>'+
-            '<div class="panel" style="margin-top:20px;"><div class="panel-header"><h3>Test Connection</h3></div>'+
-                '<p style="color:var(--muted);font-size:13px;margin-bottom:15px;">Test the connection between Telegram Bot and Railway Server.</p>'+
-                '<button class="btn-primary" onclick="testTelegramConnection()"><i class="fa-solid fa-paper-plane"></i> Send Test Message</button>'+
-                '<div id="tg-test-result" style="margin-top:20px;"></div>'+
-            '</div>';
-            await loadTelegramPage();
-        }
 async function loadUsers(){try{var t=localStorage.getItem('token');var r=await fetch('/api/admin/users',{headers:{'Authorization':'Bearer '+t}});var u=await r.json();var tb=document.getElementById('users-tbody');if(!tb)return;if(!Array.isArray(u)||u.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;">No users</td></tr>';return;}tb.innerHTML=u.map(function(x){return '<tr><td>#'+x.id+'</td><td><strong>'+x.username+'</strong></td><td>'+(x.fullname||'-')+'</td><td><span style="padding:4px 10px;border-radius:20px;background:'+(x.role==='admin'?'rgba(139,92,246,.2);color:#8b5cf6':'rgba(107,107,126,.2);color:#6b6b7e')+';font-size:12px;font-weight:600;">'+x.role+'</span></td><td><button onclick="deleteUser('+x.id+')" style="background:var(--red);border:none;color:white;padding:6px 12px;border-radius:8px;cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>';}).join('');}catch(e){console.error(e);}}
 async function deleteUser(id){if(!confirm('Delete this user?'))return;var t=localStorage.getItem('token');await fetch('/api/admin/users/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+t}});loadUsers();}
 function showAddUserModal(){document.getElementById('add-user-modal').style.display='flex';}
