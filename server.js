@@ -895,7 +895,19 @@ app.get('/api/worker/code', auth, adminOnly, async (req, res) => {
         });
         const text = await r.text();
         if (r.ok) {
-            res.json({ success: true, code: text, worker: workerName });
+            // Nadiifi boundary lines — kaliya code-ka
+            let cleanCode = text;
+            const exportIdx = cleanCode.indexOf('export default');
+            if (exportIdx > 0) {
+                cleanCode = cleanCode.substring(exportIdx);
+            }
+            // Ka saar boundary line-ka ugu dambeeya (--boundary--)
+            const lastBoundary = cleanCode.lastIndexOf('\n--');
+            if (lastBoundary > 0) {
+                cleanCode = cleanCode.substring(0, lastBoundary);
+            }
+            cleanCode = cleanCode.trim();
+            res.json({ success: true, code: cleanCode, worker: workerName });
         } else {
             res.status(r.status).json({ success: false, error: text });
         }
