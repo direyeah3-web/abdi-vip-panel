@@ -582,6 +582,7 @@ html, body {
 <div class="nav-section">System</div>
 <a class="nav-item" onclick="loadPage('status',this)"><i class="fa-solid fa-signal"></i> <span>System Status</span></a>
         <a class="nav-item" onclick="loadPage('telegram',this)"><i class="fa-brands fa-telegram" style="color:#0088cc;"></i> <span>Telegram Bot</span></a>
+        <a class="nav-item" onclick="loadPage('worker',this)"><i class="fa-solid fa-cloud"></i> <span>Cloudflare Worker</span></a>
 <a class="nav-item" onclick="loadPage('settings',this)"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
 <a class="nav-item" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span></a>
 </nav>
@@ -716,6 +717,20 @@ else if(p==='status'){
                 '<div id="tg-test-result" style="margin-top:20px;"></div>'+
             '</div>';
             await loadTelegramPage();
+        }
+        else if(p==='worker'){
+            c.innerHTML='<div class="panel-header" style="margin-bottom:20px;"><h1 style="font-size:24px;font-weight:800;">Cloudflare Worker</h1><button class="btn-secondary" onclick="loadPage(\'worker\')"><i class="fa-solid fa-refresh"></i> Refresh</button></div>'+
+            '<div class="stats-grid">'+
+                '<div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-cloud"></i></div><div class="stat-value" id="cw-status">...</div><div class="stat-label">Worker Status</div></div>'+
+                '<div class="stat-card"><div class="stat-icon purple"><i class="fa-solid fa-code"></i></div><div class="stat-value" id="cw-code-size" style="font-size:16px;">...</div><div class="stat-label">Code Size</div></div>'+
+                '<div class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-clock"></i></div><div class="stat-value" id="cw-response">...</div><div class="stat-label">Response Time</div></div>'+
+                '<div class="stat-card"><div class="stat-icon yellow"><i class="fa-solid fa-globe"></i></div><div class="stat-value" id="cw-url" style="font-size:11px;">...</div><div class="stat-label">Worker URL</div></div>'+
+            '</div>'+
+            '<div class="panel" style="margin-top:20px;"><div class="panel-header"><h3><i class="fa-solid fa-code"></i> Worker Code</h3><button class="btn-primary" onclick="saveWorkerCode()" id="cw-save-btn"><i class="fa-solid fa-save"></i> Deploy</button></div>'+
+                '<textarea id="cw-code" style="width:100%;min-height:400px;background:#0a0a0f;color:#e6f1ff;border:1px solid var(--border);border-radius:10px;padding:15px;font-family:monospace;font-size:13px;line-height:1.5;"></textarea>'+
+                '<div id="cw-result" style="margin-top:15px;"></div>'+
+            '</div>';
+            await loadWorkerPage();
         }
     else if(p==='settings'){
         var user = JSON.parse(localStorage.getItem('user') || '{}');
