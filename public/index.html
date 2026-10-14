@@ -583,6 +583,7 @@ html, body {
 <a class="nav-item" onclick="loadPage('status',this)"><i class="fa-solid fa-signal"></i> <span>System Status</span></a>
         <a class="nav-item" onclick="loadPage('telegram',this)"><i class="fa-brands fa-telegram" style="color:#0088cc;"></i> <span>Telegram Bot</span></a>
         <a class="nav-item" onclick="loadPage('worker',this)"><i class="fa-solid fa-cloud"></i> <span>Cloudflare Worker</span></a>
+        <a class="nav-item" onclick="loadPage('apk',this)"><i class="fa-solid fa-file-code"></i> <span>APK Analyzer</span></a>
 <a class="nav-item" onclick="loadPage('settings',this)"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
 <a class="nav-item" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span></a>
 </nav>
@@ -731,6 +732,15 @@ else if(p==='status'){
                 '<div id="cw-result" style="margin-top:15px;"></div>'+
             '</div>';
             await loadWorkerPage();
+        }
+        else if(p==='apk'){
+            c.innerHTML='<div class="panel-header" style="margin-bottom:20px;"><h1 style="font-size:24px;font-weight:800;">APK Analyzer</h1></div>'+
+            '<div class="panel"><h3 style="margin-bottom:15px;font-size:16px;"><i class="fa-solid fa-upload" style="color:var(--primary);margin-right:8px;"></i> Upload APK</h3>'+
+                '<input type="file" id="apk-file" accept=".apk" style="width:100%;padding:12px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:15px;">'+
+                '<button class="btn-primary" onclick="analyzeApk()" id="apk-analyze-btn" style="width:100%;justify-content:center;"><i class="fa-solid fa-magnifying-glass"></i> Analyze APK</button>'+
+                '<div id="apk-progress" style="margin-top:15px;"></div>'+
+            '</div>'+
+            '<div id="apk-results" style="margin-top:20px;"></div>';
         }
     else if(p==='settings'){
         var user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -1440,6 +1450,89 @@ async function saveWorkerCode(){
     }
     btn.disabled=false;
     btn.innerHTML='<i class="fa-solid fa-save"></i> Deploy';
+}
+
+async function analyzeApk(){
+    var fileInput=document.getElementById('apk-file');
+    var btn=document.getElementById('apk-analyze-btn');
+    var progress=document.getElementById('apk-progress');
+    var results=document.getElementById('apk-results');
+    if(!fileInput.files[0]){showToast('Warning','APK soo geli','info');return;}
+    var file=fileInput.files[0];
+    if(file.size>50*1024*1024){showToast('Warning','APK waa weyn (max 50MB)','info');return;}
+    btn.disabled=true;
+    btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+    progress.innerHTML='<p style="color:var(--muted);">1/3 — APK soo gelin...</p>';
+    try{
+        var reader=new FileReader();
+        reader.onload=async function(e){
+            var base64=e.target.result.split(',')[1];
+            var t=localStorage.getItem('token');
+            progress.innerHTML='<p style="color:var(--muted);">2/3 — APK keydi...</p>';
+            var r=await fetch('/api/apk/upload',{
+                method:'POST',
+                headers:{'Authorization':'Bearer '+t,'Content-Type':'application/json'},
+                body:JSON.stringify({filename:file.name,data:base64})
+            });
+            var d=await r.json();
+            if(!d.success){progress.innerHTML='<p style="color:var(--red);">❌ '+d.error+'</p>';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-magnifying-glass"></i> Analyze APK';return;}
+            progress.innerHTML='<p style="color:var(--muted);">3/3 — APK baadh...</p>';
+            var r2=await fetch('/api/apk/analyze',{
+                method:'POST',
+                headers:{'Authorization':'Bearer '+t,'Content-Type':'application/json'},
+                body:JSON.stringify({apkPath:d.path,filename:d.filename})
+            });
+            var d2=await r2.json();
+            if(d2.success){
+                progress.innerHTML='<p style="color:var(--green);">✅ Analysis dhamaystiran!</p>';
+                renderApkResults(d2);
+            }else{
+                progress.innerHTML='<p style="color:var(--red);">❌ '+d2.error+'</p>';
+            }
+            btn.disabled=false;
+            btn.innerHTML='<i class="fa-solid fa-magnifying-glass"></i> Analyze APK';
+        };
+        reader.readAsDataURL(file);
+    }catch(e){
+        progress.innerHTML='<p style="color:var(--red);">❌ '+e.message+'</p>';
+        btn.disabled=false;
+        btn.innerHTML='<i class="fa-solid fa-magnifying-glass"></i> Analyze APK';
+    }
+}
+
+function renderApkResults(d){
+    var el=document.getElementById('apk-results');
+    var html='';
+    html+='<div class="panel" style="margin-bottom:20px;"><h3><i class="fa-solid fa-link"></i> URLs ('+d.urls_count+')</h3>';
+    if(d.urls && d.urls.length>0){
+        html+='<div style="max-height:300px;overflow-y:auto;font-size:12px;font-family:monospace;">';
+        d.urls.forEach(function(u){html+='<div style="padding:6px;border-bottom:1px solid var(--border);word-break:break-all;">'+u+'</div>';});
+        html+='</div>';
+    } else { html+='<p style="color:var(--muted);">Ma jiro URLs.</p>'; }
+    html+='</div>';
+
+    html+='<div class="panel" style="margin-bottom:20px;"><h3><i class="fa-solid fa-key"></i> Licenses ('+d.licenses_count+')</h3>';
+    if(d.licenses && d.licenses.length>0){
+        html+='<div style="max-height:200px;overflow-y:auto;font-size:12px;font-family:monospace;">';
+        d.licenses.slice(0,50).forEach(function(l){html+='<div style="padding:6px;border-bottom:1px solid var(--border);">'+l+'</div>';});
+        html+='</div>';
+    } else { html+='<p style="color:var(--muted);">Ma jiro licenses.</p>'; }
+    html+='</div>';
+
+    html+='<div class="panel" style="margin-bottom:20px;"><h3><i class="fa-solid fa-shield"></i> Protections</h3>';
+    if(d.protection_signs && d.protection_signs.length>0){
+        d.protection_signs.forEach(function(p){html+='<div style="padding:6px;font-size:12px;font-family:monospace;">⚠️ '+p+'</div>';});
+    } else { html+='<p style="color:var(--muted);">Ma jiro protections la aqoonsaday.</p>'; }
+    html+='</div>';
+
+    html+='<div class="panel"><h3><i class="fa-solid fa-code"></i> Smali / Native / Response</h3>';
+    html+='<p style="font-size:12px;color:var(--muted);"><b>Smali files:</b> '+(d.smali_files||[]).length+'</p>';
+    html+='<p style="font-size:12px;color:var(--muted);"><b>Native libs:</b> '+(d.native_libs||[]).length+'</p>';
+    html+='<p style="font-size:12px;color:var(--muted);"><b>Response format:</b> '+(d.response_format||'N/A')+'</p>';
+    html+='</div>';
+
+    el.innerHTML=html;
+    showToast('Success','APK la baadhay!','success');
 }
 
 async function loadTelegramStatus(){
