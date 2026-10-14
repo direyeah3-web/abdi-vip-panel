@@ -132,20 +132,69 @@ app.post('/api/loader/auth', loaderAuth);
 app.post('/c', loaderAuth);
 
 app.post('/api/register', async (req, res) => {
-  const { username, password, fullname, license_key, referral_code } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
-  if (queryOne('SELECT id FROM users WHERE username = ?', [username])) return res.status(400).json({ error: 'User exists' });
-  let lic = null;
-  if (license_key) { lic = queryOne('SELECT * FROM licenses WHERE license_key = ? AND status = ?', [license_key, 'unused']); if (!lic) return res.status(400).json({ error: 'Invalid or used license' }); }
-  const hashed = await bcrypt.hash(password, 10);
-  const myRef = genCode('ABDI');
-  db.run('INSERT INTO users (username, password, fullname, license_key, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?)', [username, hashed, fullname || username, license_key || null, myRef, referral_code || null]);
-  saveDB();
-  if (lic) { db.run('UPDATE licenses SET status = ?, user_id = ?, used_at = CURRENT_TIMESTAMP WHERE id = ?', ['used', lic.id, lic.id]); saveDB(); }
-  if (referral_code) { db.run('INSERT INTO referrals (referrer_code, referred_user) VALUES (?, ?)', [referral_code, username]); saveDB(); }
-  const user = queryOne('SELECT * FROM users WHERE username = ?', [username]);
-  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET);
-  res.json({ token, user: { username: user.username, fullname: user.fullname, role: user.role, referral_code: user.referral_code, license_key: user.license_key } });
+    try {
+        const { username, password, fullname, referral_code } = req.body;
+        
+        // Xaqiiji xogta
+        if (!username || !password) {
+            return res.status(400).json({ success: false, message: 'Username iyo password waa loo baahan yahay' });
+        }
+        
+        // ===== HUBI REFERRAL CODE (AMMAANKA) =====
+        if (!referral_code || String(referral_code).trim() === '') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Referral code waa loo baahan yahay! Codsi code-ka admin-ka.' 
+            });
+        }
+        
+        // Hubi haddii referral code uu sax yahay (database-ka)
+        const refCode = String(referral_code).trim().toUpperCase();
+        const validReferral = queryOne('SELECT id, username FROM users WHERE referral_code = ?', [refCode]);
+        
+        if (!validReferral) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Referral code-ka waa khaldan yahay! Codsi code sax ah.' 
+            });
+        }
+        
+        // Hubi haddii user-ku horey u jiray
+        const existing = queryOne('SELECT id FROM users WHERE username = ?', [username]);
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'User-ku horey ayuu u jiray' });
+        }
+        
+        // Abuur user cusub
+        const hashed = await bcrypt.hash(password, 10);
+        const myRef = 'ABDI' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        db.run("INSERT INTO users (username, password, fullname, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?)", 
+            [username, hashed, fullname || username, 'user', myRef, validReferral.username]);
+        saveDB();
+        
+        // Diiwaangeli referral-ka
+        db.run("INSERT INTO referrals (referrer_code, referred_user) VALUES (?, ?)", 
+            [refCode, username]);
+        saveDB();
+        
+        const user = queryOne('SELECT * FROM users WHERE username = ?', [username]);
+        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, SECRET);
+        
+        res.json({
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullname: user.fullname,
+                role: user.role,
+                referral_code: user.referral_code
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 app.post('/api/login', async (req, res) => {
