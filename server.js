@@ -1022,7 +1022,13 @@ function extractEssential(allUrls, dexFiles) {
     const ignoreHosts = ['schemas.android.com', 'crbug.com', 'google.com', 'googleapis.com', 'github.com', 'shizuku.rikka.app', 'curl.se', 'llvm.org', 'DeNA'];
     const serverUrls = allUrls.filter(u => {
         const url = u.url || '';
-        return url.startsWith('http') && !ignoreHosts.some(h => url.includes(h));
+        // Ka saar format strings
+        if (url.includes('%s') || url.includes('%d')) return false;
+        // Ka saar native libs — DEX kaliya
+        if (u.file && u.file.includes('lib/')) return false;
+        // Ka saar useless URLs
+        if (url.includes('schemas.android.com') || url.includes('crbug.com') || url.includes('google.com') || url.includes('github.com') || url.includes('curl.se') || url.includes('llvm.org') || url.includes('DeNA')) return false;
+        return url.startsWith('http');
     });
 
     if (serverUrls.length > 0) {
