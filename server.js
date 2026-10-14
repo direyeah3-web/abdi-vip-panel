@@ -65,8 +65,8 @@ function sendTelegramNotification(message) {
 }
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 app.use(express.static('public', {
     setHeaders: (res, path) => {
         if (path.endsWith('index.html')) {
