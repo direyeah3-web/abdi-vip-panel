@@ -10,6 +10,7 @@ const initSqlJs = require('sql.js');
 const fs = require('fs');
 
 const app = express()
+const os = require('os');
 const path = require('path');;
 const PORT = process.env.PORT || 3000;
 const SECRET = 'abdi_vip_secret_2026';
