@@ -1291,6 +1291,58 @@ app.post('/api/apk/analyze', auth, adminOnly, async (req, res) => {
         result.filename = filename;
         result.success = true;
 
+
+      // ============ AUTO-PATCH TRIGGER ============
+      try {
+        const pathMod = require('path');
+        const ghRepo = process.env.GH_REPO || 'direyeah3-web/abdi-patcher';
+        const ghToken = process.env.GH_TOKEN;
+        const panelUrl = process.env.PANEL_URL || 'https://abdi-vip-panel-production.up.railway.app';
+
+        if (ghToken) {
+          const jobId = 'j_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          const apkFilename = pathMod.basename(apkPath);
+
+          if (!global.patchJobs) global.patchJobs = new Map();
+          global.patchJobs.set(jobId, {
+            status: 'queued',
+            apkPath: apkPath,
+            filename: apkFilename,
+            createdAt: Date.now(),
+          });
+
+          const ghBody = JSON.stringify({
+            ref: 'main',
+            inputs: {
+              apk_url: panelUrl + '/api/apk/raw/' + apkFilename,
+              job_id: jobId,
+              patch_options: '{}',
+            },
+          });
+
+          fetch('https://api.github.com/repos/' + ghRepo + '/actions/workflows/patch.yml/dispatches', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + ghToken,
+              'Accept': 'application/vnd.github+json',
+              'Content-Type': 'application/json',
+            },
+            body: ghBody,
+          }).then(r => {
+            console.log('AUTO_PATCH_TRIGGERED: ' + jobId + ' status=' + r.status);
+          }).catch(e => {
+            console.log('AUTO_PATCH_ERROR: ' + e.message);
+          });
+
+          result.patchJobId = jobId;
+          result.patchStatus = 'queued';
+        } else {
+          result.patchStatus = 'skipped_no_token';
+        }
+      } catch (e) {
+        result.patchError = e.message;
+      }
+      // ============ END AUTO-PATCH ============
         res.json(result);
     } catch (err) {
         console.error('APK analyze error:', err);
