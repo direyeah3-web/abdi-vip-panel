@@ -791,6 +791,11 @@ else if(p==='status'){
             '</div>'+
             '<div id="helper-results" style="margin-top:20px;"></div>';
         }
+        else if(p==='loader-config'){
+            c.innerHTML='<div class="panel-header" style="margin-bottom:20px;"><h1 style="font-size:24px;font-weight:800;"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Loader Config</h1><button class="btn-secondary" onclick="loadLoaderConfig()"><i class="fa-solid fa-refresh"></i> Refresh</button></div>'+
+            '<div id="loader-config-content">Loading...</div>';
+            loadLoaderConfig();
+        }
         else if(p==='apk'){
             c.innerHTML='<div class="panel-header" style="margin-bottom:20px;"><h1 style="font-size:24px;font-weight:800;">APK Analyzer</h1></div>'+
             '<div class="panel"><h3 style="margin-bottom:15px;font-size:16px;"><i class="fa-solid fa-upload" style="color:var(--primary);margin-right:8px;"></i> Upload APK</h3>'+
