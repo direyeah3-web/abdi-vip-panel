@@ -1902,20 +1902,20 @@ async function loadLoaderConfig(){
         var cfg=d.config||{};
         var html='';
 
-        // ===== 1. LOADER STATE =====
+        // 1. LOADER STATE
         html+='<div class="panel" style="margin-bottom:20px;"><h3><i class="fa-solid fa-power-off" style="color:var(--green);"></i> Loader State</h3>'+
         '<div style="font-size:13px;line-height:2;">'+
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><span>Maintenance Mode</span>'+
-        '<button onclick="toggleConfig(\'maintenance_mode\','+(cfg.maintenance_mode?'true':'false')+')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.maintenance_mode?'var(--red)':'var(--green)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.maintenance_mode?'ON':'OFF')+'</button></div>'+
+        '<button data-key="maintenance_mode" data-val="'+(cfg.maintenance_mode?'true':'false')+'" onclick="toggleConfigBtn(this)" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.maintenance_mode?'var(--red)':'var(--green)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.maintenance_mode?'ON':'OFF')+'</button></div>'+
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><span>Update Required</span>'+
-        '<button onclick="toggleConfig(\'update_required\','+(cfg.update_required?'true':'false')+')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.update_required?'var(--yellow)':'var(--green)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.update_required?'ON':'OFF')+'</button></div>'+
+        '<button data-key="update_required" data-val="'+(cfg.update_required?'true':'false')+'" onclick="toggleConfigBtn(this)" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.update_required?'var(--yellow)':'var(--green)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.update_required?'ON':'OFF')+'</button></div>'+
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><span>Crash Fix</span>'+
-        '<button onclick="toggleConfig(\'crash_fix\','+(cfg.crash_fix?'true':'false')+')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.crash_fix?'var(--green)':'var(--muted)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.crash_fix?'ON':'OFF')+'</button></div>'+
+        '<button data-key="crash_fix" data-val="'+(cfg.crash_fix?'true':'false')+'" onclick="toggleConfigBtn(this)" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.crash_fix?'var(--green)':'var(--muted)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.crash_fix?'ON':'OFF')+'</button></div>'+
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;"><span>Floating Menu</span>'+
-        '<button onclick="toggleConfig(\'floating_menu_enabled\','+(cfg.floating_menu_enabled?'true':'false')+')" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.floating_menu_enabled?'var(--green)':'var(--muted)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.floating_menu_enabled?'ON':'OFF')+'</button></div>'+
+        '<button data-key="floating_menu_enabled" data-val="'+(cfg.floating_menu_enabled?'true':'false')+'" onclick="toggleConfigBtn(this)" style="padding:6px 16px;border-radius:20px;border:none;cursor:pointer;background:'+(cfg.floating_menu_enabled?'var(--green)':'var(--muted)')+';color:#fff;font-size:12px;font-weight:600;">'+(cfg.floating_menu_enabled?'ON':'OFF')+'</button></div>'+
         '</div></div>';
 
-        // ===== 2. LOADER VERSION =====
+        // 2. APP VERSION
         html+='<div class="panel" style="margin-bottom:20px;"><h3><i class="fa-solid fa-code-branch"></i> App Version</h3>'+
         '<div style="margin-bottom:10px;"><label style="font-size:12px;color:var(--muted);">App Version</label>'+
         '<input type="text" id="cfg_app_version" value="'+(cfg.app_version||'')+'" style="width:100%;padding:12px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-top:6px;"></div>'+
@@ -1927,7 +1927,7 @@ async function loadLoaderConfig(){
         '<input type="text" id="cfg_maintenance_message" value="'+(cfg.maintenance_message||'')+'" style="width:100%;padding:12px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-top:6px;"></div>'+
         '<button class="btn-primary" onclick="saveLoaderConfig()" style="width:100%;justify-content:center;"><i class="fa-solid fa-save"></i> Save Config</button></div>';
 
-        // ===== 3. GAME VERSION =====
+        // 3. GAME VERSION
         html+='<div class="panel" style="margin-bottom:20px;"><h3><i class="fa-solid fa-gamepad"></i> Game Version</h3>'+
         '<select id="cfg_game_version" style="width:100%;padding:12px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;color:var(--text);">'+
         ['GL','KR','TW','VN','BGMI'].map(function(g){
@@ -1941,15 +1941,15 @@ async function loadLoaderConfig(){
         '<option value="Shizuku"'+(cfg.shizuku_mode==='Shizuku'?' selected':'')+'>Shizuku</option>'+
         '</select></div></div>';
 
-        // ===== 4. BAN LIST =====
+        // 4. BAN LIST
         var banList = cfg.ban_list || [];
         html+='<div class="panel"><h3><i class="fa-solid fa-ban" style="color:var(--red);"></i> Ban List ('+banList.length+')</h3>';
         if(banList.length===0){
             html+='<p style="color:var(--muted);font-size:13px;">Ma jiro user la ban-gareeyay.</p>';
         } else {
-            html+='<div style="max-height:300px;overflow-y:auto;">';
-            banList.forEach(function(b,i){
-                html+='<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:12px;"><span><code>'+(b.key||b.serial||'N/A')+'</code>'+(b.reason?' — '+b.reason:'')+'</span><button onclick="unbanUser(\''+(b.key||b.serial||'')+'\')" style="background:transparent;border:none;color:var(--green);cursor:pointer;font-size:12px;"><i class="fa-solid fa-check"></i> Unban</button></div>';
+            html+='<div style="max-height:300px;overflow-y:auto;" id="ban-list-container">';
+            banList.forEach(function(b){
+                html+='<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:12px;"><span><code>'+(b.key||b.serial||'N/A')+'</code>'+(b.reason?' — '+b.reason:'')+'</span><button data-unban="'+(b.key||b.serial||'')+'" onclick="unbanUserBtn(this)" style="background:transparent;border:none;color:var(--green);cursor:pointer;font-size:12px;"><i class="fa-solid fa-check"></i> Unban</button></div>';
             });
             html+='</div>';
         }
@@ -1962,6 +1962,17 @@ async function loadLoaderConfig(){
     }catch(e){
         document.getElementById('loader-config-content').innerHTML='<p style="color:var(--red);">Error: '+e.message+'</p>';
     }
+}
+
+function toggleConfigBtn(btn){
+    var key = btn.getAttribute('data-key');
+    var current = btn.getAttribute('data-val') === 'true';
+    toggleConfig(key, current);
+}
+
+function unbanUserBtn(btn){
+    var key = btn.getAttribute('data-unban');
+    unbanUser(key);
 }
 
 async function saveLoaderConfig(){
